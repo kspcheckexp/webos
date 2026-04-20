@@ -199,6 +199,18 @@ body.header-auto.header-reveal header{
 .sb-v{font-family:var(--fd);font-size:.92rem;color:var(--text);}
 .sb-v.c-in{color:var(--income);} .sb-v.c-out{color:var(--outcome);}
 
+.summary-bar.sticky {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 85;
+  box-shadow: var(--shadow);
+  margin-top: -11px;
+  border-top: none;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+}
+body.header-auto.header-reveal .summary-bar.sticky { top: var(--header-h); }
+body.header-auto:not(.header-reveal) .summary-bar.sticky { top: var(--header-peek); }
+
 /* ═══════════════════════════════════════
    CARD VIEW — transaction rows
 ═══════════════════════════════════════ */
@@ -311,19 +323,123 @@ body.header-auto.header-reveal header{
 
 .lv-delta{font-size:.62rem;font-weight:700;color:var(--accent);}
 
-/* controls — hidden until hover, but space preserved */
-.lv-ctl{display:flex;align-items:center;justify-content:center;gap:3px;visibility:hidden;transition:visibility 0s .05s,opacity .12s;opacity:0;}
-.lv-row:hover .lv-ctl{visibility:visible;opacity:1;transition-delay:0s;}
-body.kb-mode .lv-ctl{visibility:hidden;opacity:0;}
-body.kb-mode .lv-row:hover .lv-ctl{visibility:visible;opacity:1;}
-.lv-row.locked .lv-ctl{visibility:hidden!important;opacity:0!important;}
+/* ── LV-ROW SELECTED (FAB target) ── */
+.lv-row.fab-sel {
+  background: var(--surface2) !important;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  position: relative;
+}
+.lv-row.fab-sel .lv-td { color: var(--text); }
 
-.lv-btn{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg2);color:var(--text2);font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .1s,border-color .1s,color .1s;}
-.lv-btn:hover{background:var(--accent-lt);border-color:var(--accent);color:var(--accent);}
-/* remove button — red tint on hover */
-.lv-btn.rm:hover{background:var(--outcome-bg);border-color:var(--outcome);color:var(--outcome);}
-/* add-below button — green tint on hover */
-.lv-btn.add:hover{background:var(--income-bg);border-color:var(--income);color:var(--income);}
+/* hide old hover controls column entirely — replaced by FAB */
+.lv-ctl { display: none !important; }
+.lv-td-ctl { display: none !important; }
+
+/* ── FLOATING ACTION BAR ── */
+#fab-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+#fab-bar.visible { pointer-events: all; }
+
+/* slide-up pill */
+#fab-inner {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 28px rgba(0,0,0,.18);
+  padding: 10px 14px 12px;
+  transform: translateY(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#fab-bar.visible #fab-inner { transform: translateY(0); }
+
+/* row info label */
+#fab-label {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .72rem; color: var(--muted); padding: 0 2px;
+}
+#fab-label-text { font-weight: 600; }
+#fab-dismiss {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--bg2);
+  color: var(--muted); font-size: .8rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s, color .15s;
+}
+#fab-dismiss:hover { background: var(--outcome-bg); color: var(--outcome); }
+
+/* ± value row */
+#fab-adj-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.fab-big-btn {
+  flex-shrink: 0;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  font-size: 1.6rem; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--border);
+  background: var(--bg2); color: var(--text2);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab-big-btn:active { transform: scale(.91); }
+#fab-dec:hover, #fab-dec:active { background: var(--outcome-bg); border-color: var(--outcome); color: var(--outcome); }
+#fab-inc:hover, #fab-inc:active { background: var(--income-bg);  border-color: var(--income);  color: var(--income); }
+
+#fab-val-wrap {
+  flex: 1; text-align: center; cursor: pointer;
+}
+#fab-val {
+  font-family: var(--fd);
+  font-size: 1.55rem;
+  display: block;
+  transition: color .15s;
+}
+#fab-val.income  { color: var(--income); }
+#fab-val.outcome { color: var(--outcome); }
+#fab-val.changed { color: var(--accent); }
+#fab-step-label { font-size: .68rem; color: var(--muted); margin-top: 1px; }
+
+/* secondary actions row */
+#fab-actions {
+  display: flex; gap: 8px;
+}
+.fab-action-btn {
+  flex: 1; height: 40px; border-radius: 10px;
+  font-size: .78rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  border: 1.5px solid var(--border);
+  background: var(--bg2); color: var(--text2);
+  cursor: pointer;
+  transition: background .14s, border-color .14s, color .14s, transform .1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab-action-btn:active { transform: scale(.96); }
+#fab-lock { }
+#fab-lock.locked { background: rgba(200,98,43,.12); border-color: var(--accent); color: var(--accent); }
+#fab-remove { }
+#fab-remove.removed { background: rgba(58,138,92,.1); border-color: var(--income); color: var(--income); }
+#fab-add { }
+.fab-action-btn:hover { filter: brightness(.96); }
 
 /* removed item — strikethrough style */
 .lv-row.removed { opacity: 0.55; }
@@ -332,6 +448,14 @@ body.kb-mode .lv-row:hover .lv-ctl{visibility:visible;opacity:1;}
 .lv-row.removed .lv-td-name { text-decoration: line-through; color: var(--muted); }
 .lv-row.removed .lv-btn.rm { background: var(--accent); border-color: var(--accent); color: #fff; }
 .lv-row.removed .lv-btn.rm::after { content: ''; } /* placeholder for restore icon if needed */
+
+/* date grouping row */
+.lv-date-row { background: var(--bg2); }
+.lv-date-row td { 
+  padding: 8px 12px; font-size: 0.72rem; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+}
+[data-theme="dark"] .lv-date-row { background: #222; }
 
 /* inline add-row */
 .lv-addrow{background:var(--surface2);border-bottom:1px solid var(--border);}
@@ -822,6 +946,7 @@ body.kb-mode .txn-row,body.kb-mode .lv-row{cursor:default;}
       </div>
       <button class="icon-btn" id="tts-btn"      title="Suara (TTS)">🔇</button>
       <button class="icon-btn" id="settings-btn" title="Pengaturan">⚙️</button>
+      <button class="icon-btn" id="header-add-btn" title="Tambah Data Baru (Gabung)">➕</button>
       <button class="icon-btn" id="reset-btn"    title="Ganti File">↩</button>
     </div>
   </header>
@@ -849,6 +974,29 @@ body.kb-mode .txn-row,body.kb-mode .lv-row{cursor:default;}
 
   <!-- SHEET VIEW -->
   <div id="page-sheetview" style="display:none"></div>
+
+  <!-- FLOATING ACTION BAR -->
+  <div id="fab-bar">
+    <div id="fab-inner">
+      <div id="fab-label">
+        <span id="fab-label-text">—</span>
+        <button id="fab-dismiss">✕</button>
+      </div>
+      <div id="fab-adj-row">
+        <button class="fab-big-btn" id="fab-dec">−</button>
+        <div id="fab-val-wrap">
+          <span id="fab-val">—</span>
+          <div id="fab-step-label">langkah <span id="fab-step-val">500</span></div>
+        </div>
+        <button class="fab-big-btn" id="fab-inc">+</button>
+      </div>
+      <div id="fab-actions">
+        <button class="fab-action-btn" id="fab-lock">🔒 Kunci</button>
+        <button class="fab-action-btn" id="fab-remove">✕ Hapus</button>
+        <button class="fab-action-btn" id="fab-add">＋ Tambah</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- SETTINGS -->
@@ -956,6 +1104,14 @@ body.kb-mode .txn-row,body.kb-mode .lv-row{cursor:default;}
         <div><div class="sp-rl">Pusatkan Fokus</div><div class="sp-rs">Baris terpilih selalu di tengah layar</div></div>
         <label class="tog-wrap"><input type="checkbox" id="tog-center-focus"><span class="tog-sl"></span></label>
       </div>
+      <div class="sp-row">
+        <div><div class="sp-rl">Mode Edit Baris</div><div class="sp-rs">Kapan nilai bisa diedit (cocok untuk mobile)</div></div>
+        <select class="sp-sel" id="sel-edit-mode">
+          <option value="click">Klik langsung</option>
+          <option value="dblclick">Klik dua kali</option>
+          <option value="button">Tombol Edit per grup</option>
+        </select>
+      </div>
       <div class="kbd-hint">
         <code>↑↓</code> Pindah baris &nbsp;·&nbsp; <code>←→</code> Ubah nilai<br>
         <code>Enter</code>/<code>Space</code> Kunci baris<br>
@@ -1014,8 +1170,59 @@ body.kb-mode .txn-row,body.kb-mode .lv-row{cursor:default;}
     </div>
 
     <div>
-      <div class="sp-g-label">Segera Hadir</div>
-      <div class="sp-info">• Export CSV &amp; Excel<br>• Grafik tren harian<br>• Kategori custom<br>• Filter rentang jam<br>• Backup &amp; restore sesi</div>
+      <div class="sp-g-label">💾 Ekspor &amp; Simpan</div>
+
+      <!-- Session save/load -->
+      <div class="sp-row" style="align-items:flex-start;flex-direction:column;gap:8px;">
+        <div><div class="sp-rl">Sesi Kerja</div><div class="sp-rs">Simpan semua perubahan (lock, adj, catatan) lalu muat kembali kapan saja</div></div>
+        <div style="display:flex;gap:6px;width:100%">
+          <button class="f-btn" id="btn-save-session" style="flex:1;font-size:.75rem">💾 Simpan Sesi</button>
+          <button class="f-btn" id="btn-load-session" style="flex:1;font-size:.75rem">📂 Muat Sesi</button>
+          <input type="file" id="session-file-input" accept=".json" style="display:none">
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+
+      <!-- CSV -->
+      <div class="sp-row" style="align-items:flex-start;flex-direction:column;gap:6px">
+        <div><div class="sp-rl">Ekspor CSV</div><div class="sp-rs">Satu file per aplikasi, siap dibuka di Excel / Google Sheets</div></div>
+        <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">
+          <button class="f-btn" id="btn-export-csv-all" style="flex:1;font-size:.75rem">📊 Semua Aplikasi</button>
+          <button class="f-btn" id="btn-export-csv-sel" style="flex:1;font-size:.75rem">📊 Pilih Aplikasi…</button>
+        </div>
+        <select id="sel-export-app" class="sp-sel" style="width:100%;display:none">
+          <option value="">— semua —</option>
+        </select>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+
+      <!-- AI Report -->
+      <div class="sp-row" style="align-items:flex-start;flex-direction:column;gap:6px">
+        <div><div class="sp-rl">Laporan AI</div><div class="sp-rs">Format Markdown berstruktur dengan konteks lengkap — tempel langsung ke ChatGPT / Claude untuk analisis</div></div>
+        <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">
+          <button class="f-btn" id="btn-ai-copy" style="flex:1;font-size:.75rem">📋 Salin ke Clipboard</button>
+          <button class="f-btn" id="btn-ai-download" style="flex:1;font-size:.75rem">⬇ Unduh .md</button>
+        </div>
+        <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap;margin-top:2px">
+          <label style="font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:5px">
+            <input type="checkbox" id="chk-ai-notes" checked style="accent-color:var(--accent)"> Sertakan catatan
+          </label>
+          <label style="font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:5px">
+            <input type="checkbox" id="chk-ai-removed"> Sertakan item dihapus
+          </label>
+          <label style="font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:5px">
+            <input type="checkbox" id="chk-ai-adj" checked> Tampilkan penyesuaian
+          </label>
+        </div>
+        <div id="export-status" style="font-size:.72rem;color:var(--income);min-height:16px;transition:opacity .4s"></div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+
+      <!-- Coming soon -->
+      <div class="sp-info">• Grafik tren harian<br>• Kategori custom<br>• Filter rentang jam</div>
     </div>
 
   </div>
@@ -1028,14 +1235,15 @@ body.kb-mode .txn-row,body.kb-mode .lv-row{cursor:default;}
 
 /* ── META ── */
 const APP_META = {
-  'com.gojek.gopay':           {name:'GoPay',     icon:'🟢',bg:'#e3f6ec'},
-  'id.dana':                   {name:'DANA',       icon:'💙',bg:'#e3eefa'},
-  'com.shopee.id':             {name:'Shopee',     icon:'🟠',bg:'#fef0e3'},
-  'com.orderkuota.app':        {name:'OrderKuota', icon:'📱',bg:'#ede8f8'},
-  'com.otoreport.deltamobile': {name:'OtoReport',  icon:'🚗',bg:'#fef0e3'},
+  'com.gojek.gopay':           {name:'GoPay',       icon:'🟢',bg:'#e3f6ec'},
+  'id.dana':                   {name:'DANA',        icon:'💙',bg:'#e3eefa'},
+  'com.shopee.id':             {name:'Shopee',      icon:'🟠',bg:'#fef0e3'},
+  'com.orderkuota.app':        {name:'OrderKuota',  icon:'📱',bg:'#ede8f8'},
+  'com.otoreport.deltamobile': {name:'OtoReport',   icon:'🚗',bg:'#fef0e3'},
 };
 const getMeta = pkg => APP_META[pkg] || {name:pkg.split('.').pop(),icon:'📦',bg:'#f0f0f0'};
 const PREFS_STORAGE_KEY = 'historiku:prefs:v1';
+const STATE_STORAGE_KEY = 'historiku:state:v1';
 const STEP_OPTIONS = [100,500,1000,2000,5000,10000];
 const DEFAULT_SETTINGS = {
   step:500, thousandSep:true, sortOrder:'desc', defFilter:'all',
@@ -1046,6 +1254,8 @@ const DEFAULT_SETTINGS = {
   centerFocus:false,
   clearView:false,
   removeAsStrikethrough:false,
+  editMode:'dblclick',   /* 'click' | 'dblclick' | 'button' */
+  stickyBar:false,
 };
 
 function readPrefs(){
@@ -1070,6 +1280,8 @@ function readPrefs(){
         centerFocus:typeof rawSettings.centerFocus==='boolean'?rawSettings.centerFocus:DEFAULT_SETTINGS.centerFocus,
         clearView:typeof rawSettings.clearView==='boolean'?rawSettings.clearView:DEFAULT_SETTINGS.clearView,
         removeAsStrikethrough:typeof rawSettings.removeAsStrikethrough==='boolean'?rawSettings.removeAsStrikethrough:DEFAULT_SETTINGS.removeAsStrikethrough,
+        editMode:['click','dblclick','button'].includes(rawSettings.editMode)?rawSettings.editMode:DEFAULT_SETTINGS.editMode,
+        stickyBar:typeof rawSettings.stickyBar==='boolean'?rawSettings.stickyBar:DEFAULT_SETTINGS.stickyBar,
       },
     };
   }catch(e){
@@ -1080,11 +1292,32 @@ function readPrefs(){
 /* ── STATE ── */
 const SAVED_PREFS = readPrefs();
 const S = {
-  data:null, adj:{}, locked:{}, removed:{}, extras:{}, notes:{}, timeMod:{}, /* extras[pkg]=[{time,category,amount,key}] */
+  data:null, adj:{}, locked:{}, removed:{}, extras:{}, notes:{}, timeMod:{},
   activeFilter:{},
   viewMode:SAVED_PREFS.viewMode,
   settings:SAVED_PREFS.settings,
 };
+
+function saveState(){
+  try {
+    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify({
+      data: S.data, adj: S.adj, locked: S.locked, removed: S.removed,
+      extras: S.extras, notes: S.notes, timeMod: S.timeMod,
+      activeFilter: S.activeFilter
+    }));
+  } catch(e) { console.warn('Gagal menyimpan state:', e); }
+}
+
+function loadState(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(STATE_STORAGE_KEY));
+    if(saved && saved.data){
+      Object.assign(S, saved);
+      return true;
+    }
+  } catch(e) { console.warn('Gagal memuat state:', e); }
+  return false;
+}
 const KB = {on:false, idx:0, items:[]};  // flat items for list view kb nav
 const HEADER_UI = {
   enabled: window.matchMedia('(hover: hover) and (pointer: fine)').matches,
@@ -1097,7 +1330,7 @@ const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const mk = (tag,cls,html) => {const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
 const tKey  = (pkg,i) => pkg+'|'+i;
-const effP  = (base,key) => base+(S.adj[key]||0);
+const effP  = (base,key) => (Number(base)||0)+(S.adj[key]||0);
 const getScale = n => {
   let r = Math.round(Number(n));
   if(S.settings.truncate==='trunc') return Math.trunc(r/1000);
@@ -1161,7 +1394,7 @@ function getVoucherGroups(){
   (S.data.voucher||[])
     .map((item,origIdx)=>{
       const provider=inferVoucherProviderName(item);
-      return {item,origIdx,key:'voucher|'+origIdx,provider,providerKey:normalizeVoucherProviderKey(provider)};
+      return {item,origIdx,key:'voucher|'+origIdx,provider,providerKey:normalizeVoucherProviderKey(provider), date:item.date};
     })
     .sort((a,b)=>{
       const providerCmp=a.provider.localeCompare(b.provider,'id',{sensitivity:'base'});
@@ -1213,6 +1446,11 @@ function persistPrefs(){
   try{
     localStorage.setItem(PREFS_STORAGE_KEY,JSON.stringify({viewMode:S.viewMode,settings:S.settings}));
   }catch(e){}
+}
+
+function clearAllData(){
+  localStorage.removeItem(STATE_STORAGE_KEY);
+  location.reload();
 }
 
 function applyAppearanceSettings(){
@@ -1311,36 +1549,87 @@ syncViewToggleButtons();
 (function(){
   const dz=$('#drop-zone'),fi=$('#file-input'),err=$('#ul-error');
   $('#browse-btn').addEventListener('click',()=>fi.click());
-  fi.addEventListener('change',()=>fi.files[0]&&readFile(fi.files[0]));
-  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
-  dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
-  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');e.dataTransfer.files[0]&&readFile(e.dataTransfer.files[0]);});
-  function readFile(file){
-    err.textContent='';
-    const r=new FileReader();
-    r.onerror=()=>err.textContent='Gagal membaca file.';
-    r.onload=ev=>{
-      let json; try{json=JSON.parse(ev.target.result);}catch(e){err.textContent='JSON tidak valid: '+e.message;return;}
-      try{loadData(json);}catch(e){console.error(e);err.textContent='Gagal memuat: '+e.message;}
-    };
-    r.readAsText(file);
-  }
+    fi.addEventListener('change',()=>fi.files[0]&&readFile(fi.files[0]));
+    dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+    dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+    dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');e.dataTransfer.files[0]&&readFile(e.dataTransfer.files[0]);});
+    
+    // Add "Merge" button to upload screen if data exists
+    const mergeBtn = mk('button', 'drop-cta');
+    mergeBtn.id = 'merge-btn';
+    mergeBtn.textContent = '＋ Gabung Data Baru';
+    mergeBtn.style.display = S.data ? 'block' : 'none';
+    mergeBtn.style.marginTop = '10px';
+    mergeBtn.style.background = 'var(--income)';
+    mergeBtn.addEventListener('click', () => fi.click());
+    $('#upload-screen').appendChild(mergeBtn);
+
+    // Header add button
+    $('#header-add-btn').addEventListener('click', () => {
+      $('#app').style.display = 'none';
+      $('#upload-screen').style.display = 'flex';
+      const m = $('#merge-btn'); if(m) m.style.display = 'block';
+    });
+
+    function readFile(file){
+      err.textContent='';
+      const r=new FileReader();
+      r.onerror=()=>err.textContent='Gagal membaca file.';
+      r.onload=ev=>{
+        let json; try{json=JSON.parse(ev.target.result);}catch(e){err.textContent='JSON tidak valid: '+e.message;return;}
+        try{loadData(json, S.data !== null);}catch(e){console.error(e);err.textContent='Gagal memuat: '+e.message;}
+      };
+      r.readAsText(file);
+    }
 })();
 
 /* ── LOAD DATA ── */
-function loadData(json) {
-  S.data=json; S.adj={}; S.locked={}; S.activeFilter={}; S.notes={}; S.timeMod={}; S.extras={}; S.removed={};
+function loadData(json, isMerge=false) {
+  const date = json.date || new Date().toISOString().split('T')[0];
+  
+  if(!isMerge || !S.data){
+    S.data = { notif: {}, voucher: [], tarik: [], dates: [date] };
+    S.adj={}; S.locked={}; S.activeFilter={}; S.notes={}; S.timeMod={}; S.extras={}; S.removed={};
+  } else {
+    if(!S.data.dates) S.data.dates = [];
+    if(!S.data.dates.includes(date)) S.data.dates.push(date);
+  }
+
+  // Process Notifs
+  Object.entries(json.notif || {}).forEach(([pkg, txns]) => {
+    if(!S.data.notif[pkg]) S.data.notif[pkg] = [];
+    txns.forEach(t => {
+      S.data.notif[pkg].push({ ...t, date });
+    });
+  });
+
+  // Process Vouchers
+  (json.voucher || []).forEach(v => {
+    S.data.voucher.push({ ...v, date });
+  });
+
+  // Process Tarik
+  (json.tarik || []).forEach(t => {
+    S.data.tarik.push({ ...t, date });
+  });
+
+  saveState();
+  renderApp();
+}
+
+function renderApp(){
+  if(!S.data) return;
+  const json = S.data;
 
   $('#upload-screen').style.display='none';
   $('#app').style.display='flex';
   syncHeaderReveal();
 
-  if(json.date){
-    try{
-      const d=new Date(json.date+'T00:00:00');
-      $('#header-date').textContent=d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-    }catch(e){$('#header-date').textContent=json.date;}
+  if(json.dates && json.dates.length > 0){
+    const dStr = json.dates.length === 1 ? json.dates[0] : json.dates.length + ' Hari';
+    $('#header-date').textContent = dStr;
   }
+  const m = $('#merge-btn'); if(m) m.style.display = 'block';
 
   $$('[data-app-tab]').forEach(e=>e.remove());
   $$('[data-app-page]').forEach(e=>e.remove());
@@ -1378,49 +1667,109 @@ function loadData(json) {
   syncHeaderReveal();
 }
 
+// Initial Load
+if(loadState()) renderApp();
+else {
+  $('#upload-screen').style.display='flex';
+}
+
 /* ══════════════════════════════════════
    SUMMARY PAGE
 ══════════════════════════════════════ */
 function buildSummaryPage(){
   const pg=$('#page-summary'); pg.innerHTML='';
-  const notif=S.data.notif||{};
-  const all=[]; Object.entries(notif).forEach(([pkg, txns]) => txns.forEach((t,i) => {
-    const key = tKey(pkg,i);
-    if(!S.removed[key]) all.push({pkg, t, i});
-  }));
-  // Sum of scaled income and scaled outcome to strictly match displayed values
-  const iArr=[], oArr=[];
-  const inc=all.filter(x=>x.t.category==='Income').reduce((s,x)=>{ const ep=getScale(effP(x.t.harga_jual, tKey(x.pkg, x.i))); if(ep) iArr.push(ep); return s+ep; },0);
-  const out=all.filter(x=>x.t.category==='Outcome').reduce((s,x)=>{ const ep=getScale(effP(x.t.harga_jual, tKey(x.pkg, x.i))); if(ep) oArr.push(ep); return s+ep; },0);
+  if(!S.data) return;
+  const notif = S.data.notif || {};
+  const extras = S.extras || {};
+  const vouchers = S.data.voucher || [];
+  const tariks = S.data.tarik || [];
+  const tNet = t => S.settings.tarikNetAdm ? tarikNet(t) : t.jumtar;
 
-  const vg = getVoucherGroups();
-  const vArr = []; const vouT = vg.flatMap(g=>g.items).reduce((s,entry)=>{
-    if(S.removed[entry.key]) return s;
-    const ep=getScale(effP(entry.item.price,entry.key)*(Number(entry.item.qty)||0));
-    if(ep) vArr.push(ep);
-    return s+ep;
+  let gInc=0, gOut=0, gTxnCount=0;
+  const gIArr=[], gOArr=[];
+
+  // 1. Notifs & Extras per App
+  const appStats = [];
+  Object.entries(notif).forEach(([p, txs]) => {
+    const meta = getMeta(p);
+    const ext = S.extras[p] || [];
+    const all = [...txs.map((t,i)=>({...t,key:tKey(p,i)})), ...ext];
+    let pInc=0, pOut=0, pCount=0;
+    const pIArr=[], pOArr=[];
+    
+    all.forEach(t => {
+      if(S.removed[t.key]) return;
+      const ep = getScale(effP(t.harga_jual, t.key));
+      pCount++;
+      gTxnCount++;
+      if(t.category === 'Income'){
+        pInc += ep; pIArr.push(ep);
+        gInc += ep; gIArr.push(ep);
+      } else {
+        pOut += ep; pOArr.push(ep);
+        gOut += ep; gOArr.push(ep);
+      }
+    });
+    appStats.push({p, meta, pInc, pOut, pCount, pIArr, pOArr});
+  });
+
+  // 2. Vouchers (Outcome)
+  const vArr = [];
+  const vTotal = vouchers.reduce((s, v, i) => {
+    const key = 'voucher|' + i;
+    if(S.removed[key]) return s;
+    const ep = getScale(effP(v.price, key) * (Number(v.qty) || 0));
+    if(ep) { vArr.push(ep); gOut += ep; gOArr.push(ep); }
+    return s + ep;
   }, 0);
 
+  // 3. Tarik
+  let tInc=0, tOut=0;
+  const tIArr=[], tOArr=[];
+  tariks.forEach((t, i) => {
+    const key = 'tarik|' + i;
+    if(S.removed[key]) return;
+    const ep = getScale(effP(tNet(t), key));
+    if((t.type||'').toLowerCase() === 'income'){
+      tInc += ep; tIArr.push(ep);
+      gInc += ep; gIArr.push(ep);
+    } else {
+      tOut += ep; tOArr.push(ep);
+      gOut += ep; gOArr.push(ep);
+    }
+  });
+
   const grid=mk('div','stat-grid');
-  [{l:'Total Transaksi',v:all.length,c:'',s:Object.keys(notif).length+' aplikasi'},
-   {l:'Total Masuk',    v:fmt(inc,true),  c:'c-in', s:all.filter(x=>x.t.category==='Income').length+' transaksi', onclick:`copyEq(this,'${iArr.join('+')||0}',event)`},
-   {l:'Total Keluar',   v:fmt(out,true),  c:'c-out',s:all.filter(x=>x.t.category==='Outcome').length+' transaksi', onclick:`copyEq(this,'${oArr.join('+')||0}',event)`},
-   {l:'Total Notif',    v:fmt(S.data.total_notif||0),   c:'c-ac',s:'dari JSON'},
-   {l:'Total Voucher',  v:fmt(vouT,true), c:'',    s:(S.data.voucher||[]).length+' produk', onclick:`copyEq(this,'${vArr.join('+')||0}',event)`},
-   {l:'Total Tarik',    v:fmt(S.data.total_tarik||0),   c:'',    s:(S.data.tarik||[]).length+' transaksi'},
-  ].forEach(c=>{const d=mk('div','stat-card');d.innerHTML=`<div class="sc-label">${c.l}</div><div class="sc-value ${c.c}" ${c.onclick?`style="cursor:pointer" title="Salin formula" onclick="${c.onclick}"`:''}>${c.v}</div><div class="sc-sub">${c.s}</div>`;grid.appendChild(d);});
+  [{l:'Total Transaksi', v:gTxnCount, c:'', s:Object.keys(notif).length+' aplikasi'},
+   {l:'Total Masuk',     v:fmt(gInc,true),  c:'c-in',  s:'Grand Total', onclick:`copyEq(this,'${gIArr.join('+')||0}',event)`},
+   {l:'Total Keluar',    v:fmt(gOut,true),  c:'c-out', s:'Grand Total', onclick:`copyEq(this,'${gOArr.join('+')||0}',event)`},
+   {l:'Total Notif',     v:fmt(S.data.total_notif||0), c:'c-ac', s:'dari JSON'},
+   {l:'Total Voucher',   v:fmt(vTotal,true), c:'', s:vouchers.length+' produk', onclick:`copyEq(this,'${vArr.join('+')||0}',event)`},
+   {l:'Total Tarik',     v:fmt(tInc+tOut,true), c:'', s:tariks.length+' transaksi', onclick:`copyEq(this,'${[...tIArr,...tOArr].join('+')||0}',event)`},
+  ].forEach(c=>{
+    const d=mk('div','stat-card');
+    d.innerHTML=`<div class="sc-label">${c.l}</div><div class="sc-value ${c.c}" ${c.onclick?`style="cursor:pointer" title="Salin formula" onclick="${c.onclick}"`:''}>${c.v}</div><div class="sc-sub">${c.s}</div>`;
+    grid.appendChild(d);
+  });
   pg.appendChild(grid);
 
-  const sh=mk('div','sec-head');sh.innerHTML='<h2>Per Aplikasi</h2>';pg.appendChild(sh);
+  const sh=mk('div','sec-head'); sh.innerHTML='<h2>Per Aplikasi</h2>'; pg.appendChild(sh);
   const ag=mk('div','app-grid');
-  Object.entries(notif).forEach(([pkg,txns])=>{
-    const meta=getMeta(pkg);
-    const txnsValid = txns.filter((t,idx)=>!S.removed[tKey(pkg,txns.indexOf(t))]);
-    const i=txnsValid.filter(t=>t.category==='Income').reduce((s,t,_,arr,idx=txns.indexOf(t))=>s+getScale(effP(t.harga_jual,tKey(pkg,idx))),0);
-    const o=txnsValid.filter(t=>t.category==='Outcome').reduce((s,t,_,arr,idx=txns.indexOf(t))=>s+getScale(effP(t.harga_jual,tKey(pkg,idx))),0);
+  appStats.forEach(stat => {
     const card=mk('div','app-ov-card');
-    card.innerHTML=`<div class="aov-top"><div class="aov-icon" style="background:${meta.bg}">${meta.icon}</div><div><div class="aov-name">${meta.name}</div><div class="aov-cnt">${txnsValid.length} transaksi</div></div></div><div class="aov-row"><div class="aov-st"><div class="aov-sl c-i">Masuk</div><div class="aov-sv c-i">${fmt(i,true)}</div></div><div class="aov-st"><div class="aov-sl c-o">Keluar</div><div class="aov-sv c-o">${fmt(o,true)}</div></div></div>`;
-    card.addEventListener('click',()=>showPage('app-'+pkg));
+    card.innerHTML=`
+      <div class="aov-top">
+        <div class="aov-icon" style="background:${stat.meta.bg}">${stat.meta.icon}</div>
+        <div>
+          <div class="aov-name">${stat.meta.name}</div>
+          <div class="aov-cnt">${stat.pCount} transaksi</div>
+        </div>
+      </div>
+      <div class="aov-row">
+        <div class="aov-st"><div class="aov-sl c-i">Masuk</div><div class="aov-sv c-i" style="cursor:pointer" onclick="copyEq(this,'${stat.pIArr.join('+')||0}',event)">${fmt(stat.pInc,true)}</div></div>
+        <div class="aov-st"><div class="aov-sl c-o">Keluar</div><div class="aov-sv c-o" style="cursor:pointer" onclick="copyEq(this,'${stat.pOArr.join('+')||0}',event)">${fmt(stat.pOut,true)}</div></div>
+      </div>`;
+    card.addEventListener('click',()=>showPage('app-'+stat.p));
     ag.appendChild(card);
   });
   pg.appendChild(ag);
@@ -1616,56 +1965,118 @@ function buildListView(){
     return e;
   };
 
-  /* ── global summary bar ── */
-  let tInc=0, tOut=0;
-  const iArr=[], oArr=[];
-  Object.entries(notif).forEach(([p,txs])=>txs.forEach((t,i)=>{ 
-    const ep=getScale(effP(t.harga_jual,tKey(p,i))); 
-    if(t.category==='Income'){ tInc+=ep; if(ep) iArr.push(ep); } else { tOut+=ep; if(ep) oArr.push(ep); }
-  }));
-  Object.values(S.extras).flat().forEach(x=>{ 
-    const ep=getScale(effP(x.harga_jual,x.key)); 
-    if(!S.removed[x.key]) { 
-      if(x.category==='Income'){ tInc+=ep; if(ep) iArr.push(ep); } else { tOut+=ep; if(ep) oArr.push(ep); }
-    } 
-  });
-  const voucherGroups=getVoucherGroups();
-  const vArr=[]; const gVou=voucherGroups.flatMap(g=>g.items).reduce((s,entry)=>{ const ep=getScale(effP(entry.item.price,entry.key)*(Number(entry.item.qty)||0)); if(ep) vArr.push(ep); return s+ep; },0);
-  const tArr=[]; const gTar=tariks.reduce((s,t,i)=>{ const ep=getScale(effP(S.settings.tarikNetAdm?tarikNet(t):t.jumtar, 'tarik|'+i)); if(ep) tArr.push(ep); return s+ep; },0);
-  
-  const bar=mk('div','summary-bar'); bar.id='lv-global-bar';
-  bar.innerHTML=`<div class="sb-it"><span class="sb-l">Masuk</span><span class="sb-v c-in" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${iArr.join('+')||0}',event)">${fmt(tInc,true)}</span></div><div class="sb-it"><span class="sb-l">Keluar</span><span class="sb-v c-out" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${oArr.join('+')||0}',event)">${fmt(tOut,true)}</span></div><div class="sb-it"><span class="sb-l">Voucher</span><span class="sb-v" id="lv-summary-voucher-total" style="color:var(--accent);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${vArr.join('+')||0}',event)">${fmt(gVou,true)}</span></div><div class="sb-it"><span class="sb-l">Tarik</span><span class="sb-v" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${tArr.join('+')||0}',event)">${fmt(gTar,true)}</span></div>`;
-  pg.appendChild(bar);
+  function refreshAllTotals() {
+    /* ── global summary bar ── */
+    let tInc=0, tOut=0;
+    const iArr=[], oArr=[];
+    const totalsByDate = {};
+    const addT = (d, type, val) => {
+      const dt = d || 'Lainnya';
+      if(!totalsByDate[dt]) totalsByDate[dt] = { inc:0, out:0, iArr:[], oArr:[] };
+      if(type==='inc') { totalsByDate[dt].inc += val; totalsByDate[dt].iArr.push(val); }
+      else { totalsByDate[dt].out += val; totalsByDate[dt].oArr.push(val); }
+    };
 
-  const sortFn=(a,b)=>S.settings.sortOrder==='desc'?b.time.localeCompare(a.time):a.time.localeCompare(b.time);
+    Object.entries(notif).forEach(([p,txs])=>txs.forEach((t,i)=>{
+      if(S.removed[tKey(p,i)]) return;
+      const ep=getScale(effP(t.harga_jual,tKey(p,i)));
+      if(t.category==='Income'){ tInc+=ep; iArr.push(ep); addT(t.date, 'inc', ep); } 
+      else { tOut+=ep; oArr.push(ep); addT(t.date, 'out', ep); }
+    }));
+    Object.values(S.extras).flat().forEach(x=>{
+      if(S.removed[x.key]) return;
+      const ep=getScale(effP(x.harga_jual,x.key));
+      if(x.category==='Income'){ tInc+=ep; iArr.push(ep); addT(x.date, 'inc', ep); } 
+      else { tOut+=ep; oArr.push(ep); addT(x.date, 'out', ep); }
+    });
+    const vG=getVoucherGroups();
+    vG.flatMap(g=>g.items).forEach(entry=>{
+      if(S.removed[entry.key]) return;
+      const ep=getScale(effP(entry.item.price,entry.key)*(Number(entry.item.qty)||0));
+      tOut += ep; oArr.push(ep); addT(entry.date, 'out', ep);
+    });
+    tariks.forEach((t,i)=>{
+      const key = 'tarik|'+i;
+      if(S.removed[key]) return;
+      const ep=getScale(effP(S.settings.tarikNetAdm?tarikNet(t):t.jumtar,key));
+      if((t.type||'').toLowerCase()==='income'){ tInc+=ep; iArr.push(ep); addT(t.date, 'inc', ep); }
+      else { tOut+=ep; oArr.push(ep); addT(t.date, 'out', ep); }
+    });
+
+    const bar=mk('div','summary-bar'); bar.id='lv-global-bar';
+    if(S.settings.stickyBar) bar.classList.add('sticky');
+    let barHtml = `
+      <div class="sb-it"><span class="sb-l">Total Masuk</span><span class="sb-v c-in" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${iArr.join('+')||0}',event)">${fmt(tInc,true)}</span></div>
+      <div class="sb-it"><span class="sb-l">Total Keluar</span><span class="sb-v c-out" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${oArr.join('+')||0}',event)">${fmt(tOut,true)}</span></div>`;
+    
+    if(Object.keys(totalsByDate).length > 1){
+      const sortedD = Object.keys(totalsByDate).sort((a,b)=>S.settings.sortOrder==='desc'?b.localeCompare(a):a.localeCompare(b));
+      sortedD.forEach(d => {
+        const st = totalsByDate[d];
+        let dLabel = d;
+        try { dLabel = new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'}); } catch(e){}
+        barHtml += `<div class="sb-it sb-breakdown" style="border-left:1px solid var(--border);padding-left:12px;margin-left:8px;">
+          <span class="sb-l">${dLabel}</span>
+          <span class="sb-v" style="font-size:.72rem;"><span class="c-in" title="Copy Masuk" onclick="copyEq(this,'${st.iArr.join('+')||0}',event)">${fmt(st.inc,true)}</span> / <span class="c-out" title="Copy Keluar" onclick="copyEq(this,'${st.oArr.join('+')||0}',event)">${fmt(st.out,true)}</span></span>
+        </div>`;
+      });
+    }
+    bar.innerHTML = barHtml;
+    pg.appendChild(bar);
+  }
+
+  const sortFn=(a,b)=>{
+    const tc = S.settings.sortOrder==='desc'?b.time.localeCompare(a.time):a.time.localeCompare(b.time);
+    if(tc!==0) return tc;
+    /* same time: preserve original array order (stable tiebreak by origIdx) */
+    const ai = a.origIdx ?? a._origIdx ?? 0;
+    const bi = b.origIdx ?? b._origIdx ?? 0;
+    return S.settings.sortOrder==='desc' ? bi-ai : ai-bi;
+  };
+
+  /* per-group edit-unlock set for 'button' mode */
+  const editUnlocked = new Set();
 
   const makeEditable = (el, initVal, type, onSave) => {
-    el.addEventListener('click', e => {
-      if(S.locked[el.closest('tr').dataset.key]) return;
+    const mode = S.settings.editMode || 'dblclick';
+
+    const doEdit = e => {
+      const tr = el.closest('tr');
+      if(!tr) return;
+      const key = tr.dataset.key;
+      if(S.locked[key]) return;
+
+      /* button mode: only editable if group is unlocked */
+      if(mode === 'button'){
+        const grp = tr.closest('[data-pkg-group]');
+        const gpkg = grp ? grp.dataset.pkgGroup : null;
+        if(!gpkg || !editUnlocked.has(gpkg)) return;
+      }
+
       e.stopPropagation();
       if(el.querySelector('input')) return;
-      
+
       let startVal = typeof initVal === 'function' ? initVal() : initVal;
       if(type === 'number' && startVal !== '') startVal = getScale(startVal);
-      
+
       const inp = document.createElement('input');
       inp.type = type; inp.value = startVal;
       inp.className = 'add-input'; inp.style.width = '100%';
       inp.style.textAlign = type === 'number' ? 'right' : 'left';
       if(el.classList.contains('lv-td-time')||el.classList.contains('lv-td-note')) inp.style.textAlign = 'center';
-      
+
       const finish = (save) => {
         if(inp._done) return; inp._done = true;
         let ok = false;
         if(save && inp.value.trim() !== '') {
-            let finalVal = inp.value.trim();
-            if(type === 'number') {
-                let n = parseFloat(finalVal);
-                if(!isNaN(n) && (S.settings.truncate === 'trunc' || S.settings.truncate === 'round')) {
-                    finalVal = String(n * 1000);
-                }
+          let finalVal = inp.value.trim();
+          if(type === 'number') {
+            let n = parseFloat(finalVal);
+            if(!isNaN(n) && (S.settings.truncate === 'trunc' || S.settings.truncate === 'round')) {
+              finalVal = String(n * 1000);
             }
-            ok = onSave(finalVal);
+          }
+          ok = onSave(finalVal);
         }
         if(!ok) buildListView();
       };
@@ -1675,12 +2086,15 @@ function buildListView(){
       });
       el.innerHTML = ''; el.appendChild(inp); inp.focus();
       if(type==='text') inp.select();
-    });
+    };
+
+    if(mode === 'click')   el.addEventListener('click',    doEdit);
+    if(mode === 'dblclick') el.addEventListener('dblclick', doEdit);
+    if(mode === 'button')   el.addEventListener('dblclick', doEdit); /* fallback also on dblclick in button mode */
   };
 
   /* helper: insert inline add-row after a given <tr> */
-  function insertAddRow(tbody, afterTr, pkg){
-    const existing=tbody.querySelector('.lv-addrow');if(existing)existing.remove();
+  function insertAddRow(tbody, afterTr, pkg){    const existing=tbody.querySelector('.lv-addrow');if(existing)existing.remove();
     const addTr=document.createElement('tr');addTr.className='lv-addrow';
     
     // Calculate decremented time
@@ -1751,6 +2165,7 @@ function buildListView(){
     afterTr.insertAdjacentElement('afterend',addTr);
     outInp.focus();
   }
+  window._insertAddRow = insertAddRow; /* expose for FAB */
 
   /* ══ PER-APP GROUPS ══ */
   Object.entries(notif).forEach(([pkg,txns])=>{
@@ -1766,321 +2181,455 @@ function buildListView(){
     let incSum=0, outSum=0;
     const iArr=[], oArr=[];
     allRows.forEach(t=>{
+       if(S.removed[t.key]) return; /* exclude removed from totals even in strikethrough mode */
        const ep=getScale(effP(t.harga_jual,t.key));
        if(t.category==='Income'){ incSum+=ep; if(ep) iArr.push(ep); }
        else { outSum+=ep; if(ep) oArr.push(ep); }
     });
 
     const group = mk('div','lv-group');
+    group.setAttribute('data-pkg-group', pkg);
     const hd = mk('div','lv-group-hd');
     hd.innerHTML=`<span class="lv-group-icon">${meta.icon}</span><span class="lv-group-name">${meta.name}</span><span class="lv-group-meta">${allRows.length} transaksi &nbsp;·&nbsp; <span style="color:var(--income);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${iArr.join('+')||0}',event)">${fmt(incSum,true)}</span> / <span style="color:var(--outcome);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${oArr.join('+')||0}',event)">${fmt(outSum,true)}</span></span>`;
+
+    /* Edit toggle button — only shown in 'button' mode */
+    if((S.settings.editMode||'dblclick') === 'button'){
+      const isUnlocked = editUnlocked.has(pkg);
+      const editBtn = mk('button', 'f-btn' + (isUnlocked ? ' active' : ''));
+      editBtn.style.cssText = 'padding:3px 10px;font-size:.68rem;margin-left:auto;flex-shrink:0;';
+      editBtn.textContent = isUnlocked ? '✏️ Kunci' : '✏️ Edit';
+      editBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if(editUnlocked.has(pkg)) editUnlocked.delete(pkg);
+        else editUnlocked.add(pkg);
+        buildListView(); /* rebuild so all cells reflect new state */
+      });
+      hd.style.display = 'flex';
+      hd.appendChild(editBtn);
+    }
+
     group.appendChild(hd);
 
     const wrap = mk('div','lv-group-body');
     const table = document.createElement('table');
     table.className='lv-table';
     table.appendChild(thead([
-      ['#','c'],['Waktu','c'],['Masuk','r'],['Keluar','r'],['Adj','r'],['Catatan','c'],['±  ✕  ＋','c'],['🔒','c']
+      ['#','c'],['Waktu','c'],['Masuk','r'],['Keluar','r'],['Adj','r'],['Catatan','c'],['🔒','c']
     ]));
 
     const tbody=document.createElement('tbody');
-    allRows.forEach((txn,rowNum)=>{
-      const key     = txn.key;
-      const isInc   = txn.category==='Income';
-      const ep      = effP(txn.harga_jual,key);
-      const delta   = S.adj[key]||0;
-      const isLocked= S.locked[key];
-      const kbIdx   = KB.items.length;
+    tbody.setAttribute('data-pkg-group', pkg);
+    
+    // Group allRows by date
+    const rowsByDate = {};
+    allRows.forEach(t => {
+      const d = t.date || 'Lainnya';
+      if(!rowsByDate[d]) rowsByDate[d] = [];
+      rowsByDate[d].push(t);
+    });
 
-      const isRemoved = S.removed[key];
+    const sDates = Object.keys(rowsByDate).sort((a,b) => S.settings.sortOrder==='desc' ? b.localeCompare(a) : a.localeCompare(b));
 
-      const tr=document.createElement('tr');
-      tr.className='lv-row'+(isLocked?' locked':'')+(txn.isExtra?' lv-extra':'')+(isRemoved?' removed':'');
-      tr.dataset.key=key; tr.dataset.pkg=pkg; tr.dataset.kbIdx=kbIdx;
-      tr.tabIndex=-1;
-
-      tr.appendChild(mkTd('lv-td-idx',String(rowNum+1)));
-      
-      const timeVal = S.timeMod[key] || txn.time;
-      const tdTime = mkTd('lv-td-time',timeVal);
-      makeEditable(tdTime, timeVal, 'text', val => {
-        S.timeMod[key] = val; buildListView(); return true;
-      });
-      tr.appendChild(tdTime);
-
-      const incTd=document.createElement('td'); incTd.className='lv-td lv-td-in';
-      if(isInc){ 
-        const a=mkEl('span','lv-amt income'+(delta?' changed':''),fmt(ep)); incTd.appendChild(a);
-      } else { 
-        incTd.innerHTML='<span class="lv-empty-cell">—</span>'; 
+    sDates.forEach(date=>{
+      const rows=rowsByDate[date]; let dInc=0, dOut=0; const diA=[], doA=[];
+      rows.forEach(t=>{ if(S.removed[t.key]) return; const ep=getScale(effP(t.harga_jual,t.key)); if(t.category==='Income'){ dInc+=ep; diA.push(ep); } else { dOut+=ep; doA.push(ep); } });
+      if(sDates.length > 1){
+        const dr=document.createElement('tr'); dr.className='lv-date-row';
+        const dtd=document.createElement('td'); dtd.colSpan=7;
+        let dL=date; try{ dL=new Date(date+'T00:00:00').toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }catch(e){}
+        dtd.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;"><span>${dL}</span><span style="font-size:.65rem;font-weight:600;opacity:.8;"><span class="c-in" style="cursor:pointer" onclick="copyEq(this,'${diA.join('+')||0}',event)">${fmt(dInc,true)}</span> / <span class="c-out" style="cursor:pointer" onclick="copyEq(this,'${doA.join('+')||0}',event)">${fmt(dOut,true)}</span></span></div>`;
+        dr.appendChild(dtd); tbody.appendChild(dr);
       }
-      makeEditable(incTd, () => (isInc ? ep : ''), 'number', val => {
-         if(val.trim() === '') return false;
-         let n = parseFloat(val); if(isNaN(n)) return false;
-         if(!isInc) { txn.category = 'Income'; }
-         S.adj[key] = n - txn.harga_jual; 
-         buildListView(); return true;
+      rows.forEach((txn, rN)=>{
+        const key=txn.key, isI=txn.category==='Income', ep=effP(txn.harga_jual,key), delta=S.adj[key]||0, isL=S.locked[key], kbI=KB.items.length, isR=S.removed[key];
+        const tr=document.createElement('tr'); tr.className='lv-row'+(isL?' locked':'')+(txn.isExtra?' lv-extra':'')+(isR?' removed':'');
+        tr.dataset.key=key; tr.dataset.pkg=pkg; tr.dataset.kbIdx=kbI; tr.tabIndex=-1;
+        tr.appendChild(mkTd('lv-td-idx',String(rN+1)));
+        const tV=S.timeMod[key]||txn.time, tdT=mkTd('lv-td-time',tV);
+        makeEditable(tdT,tV,'text',v=>{ S.timeMod[key]=v; saveState(); buildListView(); return true; });
+        tr.appendChild(tdT);
+        const inTd=mkTd('lv-td-in'); if(isI) inTd.appendChild(mkEl('span','lv-amt income'+(delta?' changed':''),fmt(ep))); else inTd.innerHTML='<span class="lv-empty-cell">—</span>';
+        makeEditable(inTd,()=>(isI?ep:''),'number',v=>{ if(v.trim()==='') return false; let n=parseFloat(v); if(isNaN(n)) return false; if(!isI) txn.category='Income'; S.adj[key]=n-txn.harga_jual; saveState(); buildListView(); return true; });
+        tr.appendChild(inTd);
+        const outTd=mkTd('lv-td-out'); if(!isI) outTd.appendChild(mkEl('span','lv-amt outcome'+(delta?' changed':''),fmt(ep))); else outTd.innerHTML='<span class="lv-empty-cell">—</span>';
+        makeEditable(outTd,()=>(!isI?ep:''),'number',v=>{ if(v.trim()==='') return false; let n=parseFloat(v); if(isNaN(n)) return false; if(isI) txn.category='Outcome'; S.adj[key]=n-txn.harga_jual; saveState(); buildListView(); return true; });
+        tr.appendChild(outTd);
+        tr.appendChild(mkTd('lv-td-adj',mkEl('span','lv-delta',delta?(delta>0?'+'+fmt(delta):fmt(delta)):'')));
+        const nTd=mkTd('lv-td-note'); nTd.style.cssText='width:90px;font-size:0.7rem;color:var(--text2);'; nTd.textContent=S.notes[key]||'✎...'; if(!S.notes[key]) nTd.style.opacity='0.3';
+        makeEditable(nTd,S.notes[key]||'','text',v=>{ if(v) S.notes[key]=v; else delete S.notes[key]; saveState(); buildListView(); return true; });
+        tr.appendChild(nTd);
+        tr.appendChild(mkTd('lv-td-lock',mkEl('span','lv-lock','🔒')));
+        tr.addEventListener('click',e=>{ if(e.target.closest('input,button')) return; selectFAB(key,tr,{pkg,txn,isExtra:txn.isExtra,getInsertTarget:()=>({tbody,tr})}); });
+        tr.addEventListener('mouseenter',()=>{ if(!KB.on){KB.idx=kbI;applyLvFocus(false);} });
+        tbody.appendChild(tr); KB.items.push({key,type:'notif',pkg});
       });
-      tr.appendChild(incTd);
-
-      const outTd=document.createElement('td'); outTd.className='lv-td lv-td-out';
-      if(!isInc){ 
-        const a=mkEl('span','lv-amt outcome'+(delta?' changed':''),fmt(ep)); outTd.appendChild(a); 
-      } else { 
-        outTd.innerHTML='<span class="lv-empty-cell">—</span>'; 
-      }
-      makeEditable(outTd, () => (!isInc ? ep : ''), 'number', val => {
-         if(val.trim() === '') return false;
-         let n = parseFloat(val); if(isNaN(n)) return false;
-         if(isInc) { txn.category = 'Outcome'; }
-         S.adj[key] = n - txn.harga_jual; 
-         buildListView(); return true;
-      });
-      tr.appendChild(outTd);
-
-      const dTd=document.createElement('td'); dTd.className='lv-td lv-td-adj';
-      const dEl=mkEl('span','lv-delta',delta?(delta>0?'+'+fmt(delta):fmt(delta)):'');
-      dTd.appendChild(dEl); tr.appendChild(dTd);
-
-      const noteTd=document.createElement('td'); noteTd.className='lv-td lv-td-note';
-      noteTd.style.width='90px'; noteTd.style.fontSize='0.7rem'; noteTd.style.color='var(--text2)';
-      noteTd.textContent = S.notes[key] || '✎...';
-      if(!S.notes[key]) noteTd.style.opacity = '0.3';
-      makeEditable(noteTd, S.notes[key]||'', 'text', val => {
-         if(val) S.notes[key]=val; else delete S.notes[key];
-         buildListView(); return true;
-      });
-      tr.appendChild(noteTd);
-
-      /* controls: −  +  ✕  ＋ */
-      const ctlTd=document.createElement('td'); ctlTd.className='lv-td lv-td-ctl';
-      ctlTd.style.minWidth='80px';
-      const ctl=mk('div','lv-ctl');
-      const mBtn=mkEl('button','lv-btn','−');
-      const pBtn=mkEl('button','lv-btn','+');
-      const rmBtn=mkEl('button','lv-btn rm',isRemoved?'↺':'✕');rmBtn.title=isRemoved?'Pulihkan baris':'Hapus baris';
-      const addBtn=mkEl('button','lv-btn add','＋');addBtn.title='Tambah di bawah';
-      mBtn.addEventListener('click',e=>{e.stopPropagation();if(!S.locked[key])adjustPrice(key,-S.settings.step);});
-      pBtn.addEventListener('click',e=>{e.stopPropagation();if(!S.locked[key])adjustPrice(key, S.settings.step);});
-      rmBtn.addEventListener('click',e=>{
-        e.stopPropagation();
-        if(txn.isExtra && !isRemoved){
-          S.extras[pkg]=(S.extras[pkg]||[]).filter(x=>x.key!==key);
-        } else {
-          S.removed[key] = !S.removed[key];
-        }
-        buildListView();
-      });
-      addBtn.addEventListener('click',e=>{e.stopPropagation();insertAddRow(tbody,tr,pkg);});
-      ctl.append(mBtn,pBtn,rmBtn,addBtn); ctlTd.appendChild(ctl);
-      tr.appendChild(ctlTd);
-
-      const lockTd=document.createElement('td'); lockTd.className='lv-td lv-td-lock';
-      const lockEl=mkEl('span','lv-lock','🔒'); lockTd.appendChild(lockEl);
-      tr.appendChild(lockTd);
-
-      tr.addEventListener('click',()=>toggleLock(key));
-      tr.addEventListener('mouseenter',()=>{ if(!KB.on){KB.idx=kbIdx;applyLvFocus(false);} });
-      tbody.appendChild(tr);
-      KB.items.push({key,type:'notif',pkg});
     });
     table.appendChild(tbody);
     wrap.appendChild(table);
     group.appendChild(wrap);
     pg.appendChild(group);
   });
-
   /* ══ VOUCHER TABLE ══ */
+  const voucherGroups=getVoucherGroups();
   if(voucherGroups.length){
-    const allVoucherItems = voucherGroups.flatMap(group=>group.items);
-    const voucherRows = allVoucherItems.filter(entry => S.settings.removeAsStrikethrough || !S.removed[entry.key]);
-    if(!voucherRows.length) return; // skip if all removed and not in strike mode
-
-    const vArr=[];
-    const total=voucherRows.reduce((s,entry)=>{
-      if(S.removed[entry.key]) return s; // exclude removed from total
-      const ep=getScale(effP(entry.item.price,entry.key)*(Number(entry.item.qty)||0));
-      if(ep) vArr.push(ep);
-      return s+ep;
-    },0);
-    const group=mk('div','lv-group');
-    const hd=mk('div','lv-group-hd');
-    hd.innerHTML=`<span class="lv-group-icon">🎟️</span><span class="lv-group-name">Voucher</span><span class="lv-group-meta">${voucherRows.length} produk &nbsp;·&nbsp; ${voucherGroups.length} provider &nbsp;·&nbsp; <span id="lv-voucher-total" style="color:var(--accent);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${vArr.join('+')||0}',event)">${fmt(total,true)}</span></span>`;
-    group.appendChild(hd);
-
-    const wrap=mk('div','lv-group-body');
-    const table=document.createElement('table'); table.className='lv-table';
-    table.appendChild(thead([['#','c'],['Produk',''],['Qty','r'],['@Harga','r'],['Total','r'],['Adj','r'],['±','c'],['🔒','c']]));
-    const tbody=document.createElement('tbody');
-
-    voucherRows.forEach(({item,origIdx,key,provider},rowNum)=>{
-      const ep=effP(item.price,key);
-      const delta=S.adj[key]||0;
-      const isLocked=S.locked[key];
-      const kbIdx=KB.items.length;
-      const isRemoved = S.removed[key];
-      const tr=document.createElement('tr'); tr.className='lv-row'+(isLocked?' locked':'')+(isRemoved?' removed':'');
-      tr.dataset.key=key; tr.dataset.kbIdx=kbIdx; tr.tabIndex=-1;
-      tr.appendChild(mkTd('lv-td-idx',String(rowNum+1)));
-      const nameTd=document.createElement('td'); nameTd.className='lv-td';
-      const nameWrap=mk('div','');nameWrap.style.cssText='display:flex;align-items:flex-start;gap:6px;';
-      const nameText=mk('div','');
-      const nameSpan=mk('span','lv-td-name');nameSpan.textContent=getVoucherLabel(item);
-      const providerSpan=mk('div','lv-td-sub',provider);
-      nameText.append(nameSpan,providerSpan);
-      nameWrap.appendChild(nameText);
-      if(item.qty>1){
-        const expBtn=mk('button','lv-btn');expBtn.title='Expand items';expBtn.textContent='▶';expBtn.style.fontSize='.6rem';
-        let expOpen=false;
-        expBtn.addEventListener('click',e=>{
-          e.stopPropagation();expOpen=!expOpen;expBtn.textContent=expOpen?'▼':'▶';
-          const subRows=tbody.querySelectorAll('[data-voucher-parent="'+origIdx+'"]');
-          subRows.forEach(r=>r.style.display=expOpen?'':'none');
-        });
-        nameWrap.appendChild(expBtn);
-      }
-      nameTd.appendChild(nameWrap); tr.appendChild(nameTd);
-      tr.appendChild(mkTd('lv-td-out',String(item.qty)));
-      const priceTd=document.createElement('td');priceTd.className='lv-td lv-td-out';
-      const amtEl=mk('span','lv-amt neutral'+(delta?' changed':''));amtEl.textContent=fmtVoucherPrice(ep,item.qty);priceTd.appendChild(amtEl);tr.appendChild(priceTd);
-      const totTd=document.createElement('td');totTd.className='lv-td lv-td-in';
-      const totEl=mk('span','lv-amt neutral');totEl.id='lv-vtot-'+origIdx;totEl.textContent=fmt(ep*item.qty);totTd.appendChild(totEl);tr.appendChild(totTd);
-      const dTd=document.createElement('td');dTd.className='lv-td lv-td-adj';
-      const dEl=mk('span','lv-delta',delta?(delta>0?'+'+fmt(delta):fmt(delta)):'');dTd.appendChild(dEl);tr.appendChild(dTd);
-      const ctlTd=document.createElement('td');ctlTd.className='lv-td lv-td-ctl';
-      const ctl=mk('div','lv-ctl');
-      const mBtn=mk('button','lv-btn','−');const pBtn=mk('button','lv-btn','+');
-      mBtn.addEventListener('click',ev=>{ev.stopPropagation();if(!S.locked[key]){S.adj[key]=(S.adj[key]||0)-S.settings.step;refreshVoucherRow(origIdx,item,table);}});
-      pBtn.addEventListener('click',ev=>{ev.stopPropagation();if(!S.locked[key]){S.adj[key]=(S.adj[key]||0)+S.settings.step;refreshVoucherRow(origIdx,item,table);}});
-      const rmBtn=mkEl('button','lv-btn rm',isRemoved?'↺':'✕');rmBtn.title=isRemoved?'Pulihkan':'Hapus';
-      rmBtn.addEventListener('click',e=>{
-        e.stopPropagation();
-        S.removed[key] = !S.removed[key];
-        buildListView();
-      });
-      ctl.append(mBtn,pBtn,rmBtn);ctlTd.appendChild(ctl);tr.appendChild(ctlTd);
-      const lockTd=document.createElement('td');lockTd.className='lv-td lv-td-lock';
-      lockTd.appendChild(mk('span','lv-lock','🔒'));tr.appendChild(lockTd);
-      tr.addEventListener('click',()=>toggleLock(key));
-      tr.addEventListener('mouseenter',()=>{if(!KB.on){KB.idx=kbIdx;applyLvFocus(false);}});
-      tbody.appendChild(tr);
-      KB.items.push({key,type:'voucher',itemIdx:origIdx,item});
-      if(item.qty>1){
-        for(let si=0;si<item.qty;si++){
-          const subTr=document.createElement('tr');
-          subTr.setAttribute('data-voucher-parent',origIdx);
-          subTr.style.display='none';
-          subTr.style.background='var(--bg)';
-          const siTd=document.createElement('td');siTd.className='lv-td lv-td-idx';siTd.style.color='var(--border)';siTd.textContent='└';subTr.appendChild(siTd);
-          const siName=document.createElement('td');siName.className='lv-td';siName.style.cssText='font-size:.72rem;color:var(--muted);padding-left:16px;';siName.textContent='Item '+(si+1);subTr.appendChild(siName);
-          subTr.appendChild(document.createElement('td'));
-          const siPriceTd=document.createElement('td');siPriceTd.className='lv-td lv-td-out';
-          const siAmt=mk('span','lv-amt neutral');siAmt.dataset.voucherSubLv=origIdx;siAmt.textContent=fmt(ep);siPriceTd.appendChild(siAmt);subTr.appendChild(siPriceTd);
-          const siTotTd=document.createElement('td');siTotTd.className='lv-td lv-td-in';
-          const siTotEl=mk('span','lv-amt neutral');siTotEl.textContent=fmt(ep);siTotTd.appendChild(siTotEl);subTr.appendChild(siTotTd);
-          ['','',''].forEach(()=>subTr.appendChild(document.createElement('td')));
-          tbody.appendChild(subTr);
+    const vRows=voucherGroups.flatMap(g=>g.items).filter(e=>S.settings.removeAsStrikethrough || !S.removed[e.key]);
+    if(vRows.length){
+      const group=mk('div','lv-group'), hd=mk('div','lv-group-hd');
+      hd.innerHTML=`<span class="lv-group-icon">🎟️</span><span class="lv-group-name">Voucher</span><span class="lv-group-meta"></span>`;
+      group.appendChild(hd);
+      const wrap=mk('div','lv-group-body'), table=document.createElement('table'); table.className='lv-table';
+      table.appendChild(thead([['#','c'],['Produk',''],['Qty','r'],['@Harga','r'],['Total','r'],['Adj','r'],['🔒','c']]));
+      const tbody=document.createElement('tbody');
+      const rowsByD={}; vRows.forEach(r=>{ const d=r.date||'Lainnya'; if(!rowsByD[d]) rowsByD[d]=[]; rowsByD[d].push(r); });
+      const sD=Object.keys(rowsByD).sort((a,b)=>S.settings.sortOrder==='desc'?b.localeCompare(a):a.localeCompare(b));
+      sD.forEach(date=>{
+        const rows=rowsByD[date]; let dO=0; const doA=[];
+        rows.forEach(r=>{ if(S.removed[r.key]) return; const ep=getScale(effP(r.item.price,r.key)*(Number(r.item.qty)||0)); if(ep){ dO+=ep; doA.push(ep); } });
+        if(sD.length > 1){
+          const dr=document.createElement('tr'); dr.className='lv-date-row'; const dtd=document.createElement('td'); dtd.colSpan=7;
+          let dL=date; try{ dL=new Date(date+'T00:00:00').toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }catch(e){}
+          dtd.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;"><span>${dL}</span><span class="c-out" style="font-size:.65rem;font-weight:600;opacity:.8;cursor:pointer" onclick="copyEq(this,'${doA.join('+')||0}',event)">${fmt(dO,true)}</span></div>`;
+          dr.appendChild(dtd); tbody.appendChild(dr);
         }
-      }
-    });
-
-    table.appendChild(tbody);
-    wrap.appendChild(table);
-    group.appendChild(wrap);
-    pg.appendChild(group);
+        rows.forEach(({item,origIdx,key,provider},rN)=>{
+          const ep=effP(item.price,key), delta=S.adj[key]||0, isL=S.locked[key], kbI=KB.items.length, isR=S.removed[key];
+          const tr=document.createElement('tr'); tr.className='lv-row'+(isL?' locked':'')+(isR?' removed':'');
+          tr.dataset.key=key; tr.dataset.kbIdx=kbI; tr.tabIndex=-1;
+          tr.appendChild(mkTd('lv-td-idx',String(rN+1)));
+          const nTd=mkTd('lv-td'); const nW=mk('div',''); nW.style.cssText='display:flex;align-items:flex-start;gap:6px;';
+          const nT=mk('div',''); nT.append(mk('span','lv-td-name',getVoucherLabel(item)), mk('div','lv-td-sub',provider)); nW.appendChild(nT);
+          if(item.qty>1){
+            const eB=mk('button','lv-btn','▶'); eB.title='Expand items'; eB.style.fontSize='.6rem'; let eO=false;
+            eB.addEventListener('click',e=>{ e.stopPropagation(); eO=!eO; eB.textContent=eO?'▼':'▶'; tbody.querySelectorAll('[data-voucher-parent="'+origIdx+'"]').forEach(r=>r.style.display=eO?'':'none'); });
+            nW.appendChild(eB);
+          }
+          nTd.appendChild(nW); tr.appendChild(nTd); tr.appendChild(mkTd('lv-td-out',String(item.qty)));
+          const pTd=mkTd('lv-td lv-td-out'); pTd.appendChild(mkEl('span','lv-amt neutral'+(delta?' changed':''),fmtVoucherPrice(ep,item.qty))); tr.appendChild(pTd);
+          const tTd=mkTd('lv-td lv-td-in'); tTd.appendChild(mkEl('span','lv-amt neutral',fmt(ep*item.qty))); tr.appendChild(tTd);
+          tr.appendChild(mkTd('lv-td-adj',mkEl('span','lv-delta',delta?(delta>0?'+'+fmt(delta):fmt(delta)):'')));
+          tr.appendChild(mkTd('lv-td-lock',mkEl('span','lv-lock','🔒')));
+          tr.addEventListener('click',e=>{ if(e.target.closest('input,button')) return; selectFAB(key,tr,{isVoucher:true,item,origIdx,getInsertTarget:()=>null}); });
+          tr.addEventListener('mouseenter',()=>{ if(!KB.on){KB.idx=kbI;applyLvFocus(false);} });
+          tbody.appendChild(tr); KB.items.push({key,type:'voucher',itemIdx:origIdx,item});
+          if(item.qty>1){ for(let si=0;si<item.qty;si++){
+            const sT=document.createElement('tr'); sT.setAttribute('data-voucher-parent',origIdx); sT.style.cssText='display:none;background:var(--bg);';
+            sT.appendChild(mkTd('lv-td-idx',mkEl('span','','└'))); sT.appendChild(mkTd('lv-td',mkEl('div','','Item '+(si+1)))); sT.appendChild(document.createElement('td'));
+            sT.appendChild(mkTd('lv-td lv-td-out',mkEl('span','lv-amt neutral',fmt(ep)))); sT.appendChild(mkTd('lv-td lv-td-in',mkEl('span','lv-amt neutral',fmt(ep))));
+            ['','',''].forEach(()=>sT.appendChild(document.createElement('td'))); tbody.appendChild(sT);
+          }}
+        });
+      });
+      table.appendChild(tbody); wrap.appendChild(table); group.appendChild(wrap); pg.appendChild(group);
+    }
   }
 
   /* ══ TARIK TABLE ══ */
   if(tariks.length){
     const tNet=t=>S.settings.tarikNetAdm?tarikNet(t):t.jumtar;
-    const tIArr=[], tOArr=[];
-    let incSum=0, outSum=0;
-    
-    tariks.forEach((t, i) => {
-      const epRaw=effP(tNet(t),'tarik|'+i);
-      const ep=getScale(epRaw);
-      if((t.type||'').toLowerCase()==='income'){ incSum+=epRaw; if(ep) tIArr.push(ep); }
-      else { outSum+=epRaw; if(ep) tOArr.push(ep); }
-    });
-
-    const group=mk('div','lv-group');
-    const hd=mk('div','lv-group-hd');
-    hd.innerHTML=`<span class="lv-group-icon">💸</span><span class="lv-group-name">Tarik</span><span class="lv-group-meta">${tariks.length} transaksi &nbsp;·&nbsp; <span style="color:var(--income);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${tIArr.join('+')||0}',event)">${fmt(incSum)}</span> / <span style="color:var(--outcome);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${tOArr.join('+')||0}',event)">${fmt(outSum)}</span></span>`;
-    group.appendChild(hd);
-    const wrap=mk('div','lv-group-body');
-    const table=document.createElement('table'); table.className='lv-table';
-    table.appendChild(thead([['#','c'],['Waktu',''],['Masuk','r'],['Keluar','r'],['Adj','r'],['±','c'],['🔒','c']]));
-    const tbody=document.createElement('tbody');
-    tariks.map((item,i)=>({...item,origIdx:i,key:'tarik|'+i}))
-      .filter(entry => S.settings.removeAsStrikethrough || !S.removed[entry.key])
-      .sort(sortFn).forEach((entry,i)=>{
-      const item=entry;
-      const origIdx=entry.origIdx;
-      const key=entry.key;
-      const isInc=(item.type||'').toLowerCase()==='income';
-      const base=S.settings.tarikNetAdm?tarikNet(item):item.jumtar;
-      const ep=effP(base,key);
-      const delta=S.adj[key]||0;
-      const isLocked=S.locked[key];
-      const kbIdx=KB.items.length;
-      const isRemoved = S.removed[key];
-      const tr=document.createElement('tr');tr.className='lv-row'+(isLocked?' locked':'')+(isRemoved?' removed':'');
-      tr.dataset.key=key;tr.dataset.kbIdx=kbIdx;tr.tabIndex=-1;
-      tr.appendChild(mkTd('lv-td-idx',String(i+1)));
-      const timeVal = S.timeMod[key] || item.time;
-      const tdTime = mkTd('lv-td-time',timeVal);
-      makeEditable(tdTime, timeVal, 'text', val => {
-        S.timeMod[key] = val; buildListView(); return true;
+    const vT=tariks.filter((_,i)=>S.settings.removeAsStrikethrough || !S.removed['tarik|'+i]);
+    if(vT.length){
+      const group=mk('div','lv-group'), hd=mk('div','lv-group-hd');
+      hd.innerHTML=`<span class="lv-group-icon">💸</span><span class="lv-group-name">Tarik</span><span class="lv-group-meta"></span>`;
+      group.appendChild(hd);
+      const wrap=mk('div','lv-group-body'), table=document.createElement('table'); table.className='lv-table';
+      table.appendChild(thead([['#','c'],['Waktu','c'],['Masuk','r'],['Keluar','r'],['Adj','r'],['Catatan','c'],['🔒','c']]));
+      const tbody=document.createElement('tbody');
+      const rowsByD={}; vT.forEach((t,i)=>{ const d=t.date||'Lainnya'; if(!rowsByD[d]) rowsByD[d]=[]; rowsByD[d].push({...t,origIdx:i,key:'tarik|'+i}); });
+      const sD=Object.keys(rowsByD).sort((a,b)=>S.settings.sortOrder==='desc'?b.localeCompare(a):a.localeCompare(b));
+      sD.forEach(date=>{
+        const rows=rowsByD[date]; let dI=0, dO=0; const diA=[], doA=[];
+        rows.forEach(t=>{ if(S.removed[t.key]) return; const ep=getScale(effP(tNet(t),t.key)); if((t.type||'').toLowerCase()==='income'){ dI+=ep; diA.push(ep); } else { dO+=ep; doA.push(ep); } });
+        if(sD.length > 1){
+          const dr=document.createElement('tr'); dr.className='lv-date-row'; const dtd=document.createElement('td'); dtd.colSpan=7;
+          let dL=date; try{ dL=new Date(date+'T00:00:00').toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }catch(e){}
+          dtd.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;"><span>${dL}</span><span style="font-size:.65rem;font-weight:600;opacity:.8;"><span class="c-in" style="cursor:pointer" onclick="copyEq(this,'${diA.join('+')||0}',event)">${fmt(dI,true)}</span> / <span class="c-out" style="cursor:pointer" onclick="copyEq(this,'${doA.join('+')||0}',event)">${fmt(dO,true)}</span></span></div>`;
+          dr.appendChild(dtd); tbody.appendChild(dr);
+        }
+        rows.forEach((t,rN)=>{
+          const i=t.origIdx, key=t.key, isI=(t.type||'').toLowerCase()==='income', ep=effP(tNet(t),key), delta=S.adj[key]||0, isL=S.locked[key], kbI=KB.items.length, isR=S.removed[key];
+          const tr=document.createElement('tr'); tr.className='lv-row'+(isL?' locked':'')+(isR?' removed':'');
+          tr.dataset.key=key; tr.dataset.kbIdx=kbI; tr.tabIndex=-1;
+          tr.appendChild(mkTd('lv-td-idx',String(rN+1)));
+          const tV=S.timeMod[key]||t.time, tdT=mkTd('lv-td-time',tV);
+          makeEditable(tdT,tV,'text',v=>{ S.timeMod[key]=v; saveState(); buildListView(); return true; });
+          tr.appendChild(tdT);
+          const inTd=mkTd('lv-td-in'); if(isI) inTd.appendChild(mkEl('span','lv-amt income'+(delta?' changed':''),fmt(ep))); else inTd.innerHTML='<span class="lv-empty-cell">—</span>';
+          makeEditable(inTd,()=>(isI?ep:''),'number',v=>{ if(v.trim()==='') return false; let n=parseFloat(v); if(isNaN(n)) return false; if(!isI) t.type='Income'; S.adj[key]=n-tNet(t); saveState(); buildListView(); return true; });
+          tr.appendChild(inTd);
+          const outTd=mkTd('lv-td-out'); if(!isI) outTd.appendChild(mkEl('span','lv-amt outcome'+(delta?' changed':''),fmt(ep))); else outTd.innerHTML='<span class="lv-empty-cell">—</span>';
+          makeEditable(outTd,()=>(!isI?ep:''),'number',v=>{ if(v.trim()==='') return false; let n=parseFloat(v); if(isNaN(n)) return false; if(isI) t.type='Outcome'; S.adj[key]=n-tNet(t); saveState(); buildListView(); return true; });
+          tr.appendChild(outTd);
+          tr.appendChild(mkTd('lv-td-adj',mkEl('span','lv-delta',delta?(delta>0?'+'+fmt(delta):fmt(delta)):'')));
+          const nTd=mkTd('lv-td-note'); nTd.style.cssText='width:90px;font-size:0.7rem;color:var(--text2);'; nTd.textContent=S.notes[key]||'✎...'; if(!S.notes[key]) nTd.style.opacity='0.3';
+          makeEditable(nTd,S.notes[key]||'','text',v=>{ if(v) S.notes[key]=v; else delete S.notes[key]; saveState(); buildListView(); return true; });
+          tr.appendChild(nTd);
+          tr.appendChild(mkTd('lv-td-lock',mkEl('span','lv-lock','🔒')));
+          tr.addEventListener('click',e=>{ if(e.target.closest('input,button')) return; selectFAB(key,tr,{isTarik:true,item:t,origIdx:i,getInsertTarget:()=>null}); });
+          tr.addEventListener('mouseenter',()=>{ if(!KB.on){KB.idx=kbI;applyLvFocus(false);}});
+          tbody.appendChild(tr); KB.items.push({key,type:'tarik',itemIdx:i,item:t});
+        });
       });
-      tr.appendChild(tdTime);
-      
-      const incTd=document.createElement('td');incTd.className='lv-td lv-td-in';
-      if(isInc) { incTd.innerHTML=`<span class="lv-amt income${delta?' changed':''}">${fmt(ep)}</span>`; }
-      else { incTd.innerHTML='<span class="lv-empty-cell">—</span>'; }
-      makeEditable(incTd, () => (isInc ? ep : ''), 'number', val => {
-         if(val.trim() === '') return false;
-         let n = parseFloat(val); if(isNaN(n)) return false;
-         if(!isInc) item.type = 'Income';
-         S.adj[key] = n - base; 
-         buildListView(); return true;
-      });
-      tr.appendChild(incTd);
-      
-      const outTd=document.createElement('td');outTd.className='lv-td lv-td-out';
-      if(!isInc) { outTd.innerHTML=`<span class="lv-amt outcome${delta?' changed':''}">${fmt(ep)}</span>`; }
-      else { outTd.innerHTML='<span class="lv-empty-cell">—</span>'; }
-      makeEditable(outTd, () => (!isInc ? ep : ''), 'number', val => {
-         if(val.trim() === '') return false;
-         let n = parseFloat(val); if(isNaN(n)) return false;
-         if(isInc) item.type = 'Outcome';
-         S.adj[key] = n - base; 
-         buildListView(); return true;
-      });
-      tr.appendChild(outTd);
-      const dTd=document.createElement('td');dTd.className='lv-td lv-td-adj';
-      const dEl=mk('span','lv-delta',delta?(delta>0?'+'+fmt(delta):fmt(delta)):'');dTd.appendChild(dEl);tr.appendChild(dTd);
-      const ctlTd=document.createElement('td');ctlTd.className='lv-td lv-td-ctl';
-      const ctl=mk('div','lv-ctl');
-      const mBtn=mk('button','lv-btn','−');const pBtn=mk('button','lv-btn','+');
-      mBtn.addEventListener('click',ev=>{ev.stopPropagation();if(!S.locked[key])adjustPrice(key,-S.settings.step);});
-      pBtn.addEventListener('click',ev=>{ev.stopPropagation();if(!S.locked[key])adjustPrice(key, S.settings.step);});
-      const rmBtn=mkEl('button','lv-btn rm',isRemoved?'↺':'✕');rmBtn.title=isRemoved?'Pulihkan':'Hapus';
-      rmBtn.addEventListener('click',e=>{
-        e.stopPropagation();
-        S.removed[key]=!S.removed[key];
-        buildListView();
-      });
-      ctl.append(mBtn,pBtn,rmBtn);ctlTd.appendChild(ctl);tr.appendChild(ctlTd);
-      const lockTd=document.createElement('td');lockTd.className='lv-td lv-td-lock';
-      lockTd.appendChild(mk('span','lv-lock','🔒'));tr.appendChild(lockTd);
-      tr.addEventListener('click',()=>toggleLock(key));
-      tr.addEventListener('mouseenter',()=>{if(!KB.on){KB.idx=kbIdx;applyLvFocus(false);}});
-      tbody.appendChild(tr);
-      KB.items.push({key,type:'tarik',origIdx});
-    });
-    table.appendChild(tbody);wrap.appendChild(table);group.appendChild(wrap);pg.appendChild(group);
+      table.appendChild(tbody); wrap.appendChild(table); group.appendChild(wrap); pg.appendChild(group);
+    }
   }
+  refreshAllTotals();
 }
+
+/* ════════════════════════════════════════
+   FLOATING ACTION BAR ENGINE
+════════════════════════════════════════ */
+(function(){
+  const fabBar   = document.getElementById('fab-bar');
+  const fabVal   = document.getElementById('fab-val');
+  const fabLabel = document.getElementById('fab-label-text');
+  const fabStep  = document.getElementById('fab-step-val');
+  const fabDec   = document.getElementById('fab-dec');
+  const fabInc   = document.getElementById('fab-inc');
+  const fabLock  = document.getElementById('fab-lock');
+  const fabRm    = document.getElementById('fab-remove');
+  const fabAdd   = document.getElementById('fab-add');
+  const fabDismiss = document.getElementById('fab-dismiss');
+
+  let FAB = {
+    key:  null,
+    tr:   null,
+    meta: null,   // {pkg,txn,isExtra,isVoucher,isTarik,item,origIdx,getInsertTarget}
+  };
+
+  /* ── show / hide ── */
+  function showFAB(){ fabBar.classList.add('visible'); }
+  function hideFAB(){
+    fabBar.classList.remove('visible');
+    if(FAB.tr) FAB.tr.classList.remove('fab-sel');
+    FAB = {key:null, tr:null, meta:null};
+  }
+
+  /* ── read effective value from state ── */
+  function getEP(){
+    if(!FAB.key || !S.data) return 0;
+    const key = FAB.key;
+    const parts = key.split('|');
+    const type  = parts[0];
+    if(type==='voucher'){
+      const item=(S.data.voucher||[])[parseInt(parts[1])];
+      return item ? effP(item.price, key) : 0;
+    }
+    if(type==='tarik'){
+      const item=(S.data.tarik||[])[parseInt(parts[1])];
+      if(!item) return 0;
+      const base = S.settings.tarikNetAdm ? tarikNet(item) : item.jumtar;
+      return effP(base, key);
+    }
+    // notif / extra
+    const pkg=parts[0], idx=parseInt(parts[1]);
+    const txn = (S.data.notif[pkg]||[])[idx]
+             || (S.extras[pkg]||[]).find(x=>x.key===key);
+    return txn ? effP(txn.harga_jual, key) : 0;
+  }
+
+  /* ── get category for colour ── */
+  function getCategory(){
+    if(!FAB.key||!S.data) return '';
+    const parts=FAB.key.split('|');
+    const type=parts[0];
+    if(type==='voucher') return 'neutral';
+    if(type==='tarik'){
+      const item=(S.data.tarik||[])[parseInt(parts[1])];
+      return item&&(item.type||'').toLowerCase()==='income'?'income':'outcome';
+    }
+    const pkg=parts[0], idx=parseInt(parts[1]);
+    const txn=(S.data.notif[pkg]||[])[idx]
+           ||(S.extras[pkg]||[]).find(x=>x.key===FAB.key);
+    return txn ? (txn.category==='Income'?'income':'outcome') : '';
+  }
+
+  /* ── update FAB display ── */
+  function refreshFAB(){
+    if(!FAB.key) return;
+    const ep  = getEP();
+    const cat = getCategory();
+    const del = S.adj[FAB.key]||0;
+    fabVal.textContent  = fmt(ep);
+    fabVal.className    = cat + (del?' changed':'');
+    fabStep.textContent = fmt(S.settings.step);
+
+    const isLocked  = !!S.locked[FAB.key];
+    const isRemoved = !!S.removed[FAB.key];
+    fabLock.textContent = isLocked ? '🔓 Buka' : '🔒 Kunci';
+    fabLock.classList.toggle('locked', isLocked);
+    fabRm.textContent   = isRemoved ? '↺ Pulihkan' : '✕ Hapus';
+    fabRm.classList.toggle('removed', isRemoved);
+
+    /* also update the row's delta cell in the table */
+    const row = document.querySelector('.lv-row[data-key="'+FAB.key+'"]');
+    if(row){
+      const dEl = row.querySelector('.lv-delta');
+      if(dEl) dEl.textContent = del?(del>0?'+'+fmt(del):fmt(del)):'';
+      const amtEl = row.querySelector('.lv-amt.income,.lv-amt.outcome,.lv-amt.neutral');
+      if(amtEl){ amtEl.textContent=fmt(ep); amtEl.classList.toggle('changed',del!==0); }
+    }
+  }
+
+  /* ── public: called by row click ── */
+  window.selectFAB = function(key, tr, meta){
+    /* deselect previous */
+    $$('.lv-row.fab-sel').forEach(r=>r.classList.remove('fab-sel'));
+
+    FAB.key  = key;
+    FAB.tr   = tr;
+    FAB.meta = meta;
+
+    tr.classList.add('fab-sel');
+
+    /* label */
+    const parts=key.split('|'); const type=parts[0];
+    if(type==='voucher'){
+      const item=(S.data.voucher||[])[parseInt(parts[1])];
+      fabLabel.textContent = item ? item.product : 'Voucher';
+    } else if(type==='tarik'){
+      const item=(S.data.tarik||[])[parseInt(parts[1])];
+      fabLabel.textContent = '💸 Tarik ' + (item?item.time:'');
+    } else {
+      const pkg=parts[0], idx=parseInt(parts[1]);
+      const txn=(S.data.notif[pkg]||[])[idx]
+             ||(S.extras[pkg]||[]).find(x=>x.key===key);
+      const meta2=getMeta(pkg);
+      fabLabel.textContent = meta2.icon+' '+meta2.name+(txn?' · '+txn.time:'');
+    }
+
+    /* hide ＋ for voucher/tarik (add-below not applicable) */
+    fabAdd.style.display = (meta.isVoucher||meta.isTarik) ? 'none' : '';
+
+    refreshFAB();
+    showFAB();
+
+    /* scroll row into view with space for FAB (~120px) */
+    setTimeout(()=>{
+      const rect = tr.getBoundingClientRect();
+      const fabH = 130;
+      if(rect.bottom > window.innerHeight - fabH){
+        window.scrollBy({top: rect.bottom - (window.innerHeight - fabH - 12), behavior:'smooth'});
+      }
+    }, 60);
+  };
+
+  /* ── DEC ── */
+  fabDec.addEventListener('click', ()=>{
+    if(!FAB.key||S.locked[FAB.key]) return;
+    adjustPrice(FAB.key, -S.settings.step);
+    refreshFAB();
+    if(window.TTS&&window.TTS.enabled) window.ttsSpeakAdjust(FAB.key, getEP(), -1);
+  });
+
+  /* ── INC ── */
+  fabInc.addEventListener('click', ()=>{
+    if(!FAB.key||S.locked[FAB.key]) return;
+    adjustPrice(FAB.key, S.settings.step);
+    refreshFAB();
+    if(window.TTS&&window.TTS.enabled) window.ttsSpeakAdjust(FAB.key, getEP(), 1);
+  });
+
+  /* tap value → open inline input for exact edit */
+  document.getElementById('fab-val-wrap').addEventListener('click', ()=>{
+    if(!FAB.key||S.locked[FAB.key]) return;
+    const raw = String(getEP());
+    const inp = document.createElement('input');
+    inp.type='number'; inp.value=raw;
+    inp.style.cssText='width:140px;font-size:1.2rem;font-family:var(--fd);text-align:center;background:var(--bg2);border:2px solid var(--accent);border-radius:8px;padding:4px 8px;color:var(--text);outline:none;';
+    const old=fabVal.textContent;
+    fabVal.parentNode.insertBefore(inp, fabVal);
+    fabVal.style.display='none';
+    inp.focus(); inp.select();
+    const finish=(save)=>{
+      inp.remove(); fabVal.style.display='';
+      if(!save) return;
+      const n=parseFloat(inp.value); if(isNaN(n)) return;
+      /* calculate raw base for this key */
+      const parts=FAB.key.split('|'), type=parts[0];
+      if(type==='voucher'){
+        const item=(S.data.voucher||[])[parseInt(parts[1])]; if(!item) return;
+        S.adj[FAB.key]=n-item.price;
+      } else if(type==='tarik'){
+        const item=(S.data.tarik||[])[parseInt(parts[1])]; if(!item) return;
+        const base=S.settings.tarikNetAdm?tarikNet(item):item.jumtar;
+        S.adj[FAB.key]=n-base;
+      } else {
+        const pkg=parts[0],idx=parseInt(parts[1]);
+        const txn=(S.data.notif[pkg]||[])[idx]||(S.extras[pkg]||[]).find(x=>x.key===FAB.key);
+        if(!txn) return;
+        S.adj[FAB.key]=n-txn.harga_jual;
+      }
+      refreshFAB();
+    };
+    inp.addEventListener('blur',()=>finish(true));
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')finish(true);if(e.key==='Escape')finish(false);});
+  });
+
+  /* ── LOCK ── */
+  fabLock.addEventListener('click', ()=>{
+    if(!FAB.key) return;
+    toggleLock(FAB.key);
+    refreshFAB();
+  });
+
+  /* ── REMOVE ── */
+  fabRm.addEventListener('click', ()=>{
+    if(!FAB.key) return;
+    const key=FAB.key, meta=FAB.meta||{};
+    if(meta.isExtra||meta.txn?.isExtra){
+      const pkg=key.split('|')[0];
+      S.extras[pkg]=(S.extras[pkg]||[]).filter(x=>x.key!==key);
+      hideFAB(); buildListView();
+    } else {
+      S.removed[key]=!S.removed[key];
+      refreshAllTotals();
+      refreshFAB();
+      /* update row class */
+      const row=document.querySelector('.lv-row[data-key="'+key+'"]');
+      if(row) row.classList.toggle('removed',!!S.removed[key]);
+    }
+  });
+
+  /* ── ADD BELOW (FAB) ── */
+  fabAdd.addEventListener('click', ()=>{
+    if(!FAB.meta||!FAB.tr) return;
+    const pkg=FAB.meta.pkg||FAB.key.split('|')[0];
+    const tbody=FAB.tr.closest('tbody');
+    if(tbody && window._insertAddRow) window._insertAddRow(tbody, FAB.tr, pkg);
+  });
+
+  /* ── DISMISS ── */
+  fabDismiss.addEventListener('click', hideFAB);
+
+  /* tap outside table area also dismisses */
+  document.addEventListener('click', e=>{
+    if(!FAB.key) return;
+    if(e.target.closest('#fab-bar,.lv-row')) return;
+    hideFAB();
+  }, true);
+
+  /* keyboard arrow keys also update FAB if a key is selected */
+  document.addEventListener('keydown', e=>{
+    if(!FAB.key) return;
+    if(e.key==='ArrowRight'){ e.preventDefault(); fabInc.click(); }
+    if(e.key==='ArrowLeft') { e.preventDefault(); fabDec.click(); }
+    if(e.key==='Escape')    { hideFAB(); }
+    if(e.key==='l'||e.key==='L'){ fabLock.click(); }
+  });
+
+  /* refresh FAB when step changes */
+  const stepObserver=new MutationObserver(()=>{if(FAB.key)refreshFAB();});
+  const stepDisp=document.getElementById('step-display');
+  if(stepDisp) stepObserver.observe(stepDisp,{childList:true,subtree:true});
+
+  /* also rebuild after buildListView if FAB was open */
+  const origBuildListView = window.buildListView;
+  // We can't override buildListView (closed scope), so instead just
+  // auto-dismiss when list view rebuilds (safe default).
+  // Re-select is re-triggered by tapping the row again.
+  // FAB stays open during adjustPrice (it patches the DOM in-place).
+
+})();
 
 /* ── ADJUST PRICE ── */
 function adjustPrice(key,delta){
@@ -2111,6 +2660,7 @@ function adjustPrice(key,delta){
       const dEl=row.querySelector('.txn-delta,.lv-delta');
       if(dEl){dEl.textContent=d>0?'+'+fmt(d):d<0?fmt(d):'';dEl.classList.toggle('vis',d!==0);}
     });
+    refreshAllTotals();
     return;
   }
 
@@ -2128,8 +2678,179 @@ function adjustPrice(key,delta){
     const dEl=row.querySelector('.txn-delta,.lv-delta');
     if(dEl){dEl.textContent=d>0?'+'+fmt(d):d<0?fmt(d):'';dEl.classList.toggle('vis',d!==0);}
   });
-  refreshSbOnly(pkg);
+  refreshAllTotals();
 }
+
+function refreshAllTotals(){
+  if(!S.data) return;
+  const notif = S.data.notif || {};
+  const vouchers = S.data.voucher || [];
+  const tariks = S.data.tarik || [];
+  const tNet = t => S.settings.tarikNetAdm ? tarikNet(t) : t.jumtar;
+
+  let gInc=0, gOut=0;
+  const gIArr=[], gOArr=[];
+
+  // 1. Notifs & Extras
+  Object.entries(notif).forEach(([p, txs]) => {
+    const ext = S.extras[p] || [];
+    const all = [...txs.map((t,i)=>({...t,key:tKey(p,i)})), ...ext];
+    let pInc=0, pOut=0;
+    const pIArr=[], pOArr=[];
+    
+    all.forEach(t => {
+      if(S.removed[t.key]) return;
+      const ep = getScale(effP(t.harga_jual, t.key));
+      if(t.category === 'Income'){
+        pInc += ep; pIArr.push(ep);
+        gInc += ep; gIArr.push(ep);
+      } else {
+        pOut += ep; pOArr.push(ep);
+        gOut += ep; gOArr.push(ep);
+      }
+    });
+
+    // Update group header
+    const meta = getMeta(p);
+    $$('.lv-group-name').forEach(n => {
+      if(n.textContent === meta.name){
+        const sibling = n.parentElement.querySelector('.lv-group-meta');
+        if(sibling) {
+          const visibleCount = all.filter(t => S.settings.removeAsStrikethrough || !S.removed[t.key]).length;
+          sibling.innerHTML = `${visibleCount} transaksi &nbsp;·&nbsp; <span style="color:var(--income);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${pIArr.join('+')||0}',event)">${fmt(pInc,true)}</span> / <span style="color:var(--outcome);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${pOArr.join('+')||0}',event)">${fmt(pOut,true)}</span>`;
+        }
+      }
+    });
+
+    // Update individual app summary bar (if in card view)
+    const bar = document.getElementById('sb-' + p);
+    if(bar){
+      const filter = S.activeFilter[p] || 'all';
+      const filt = filter==='all' ? all : all.filter(t=>t.category===filter);
+      const dispRows = filt.filter(t => S.settings.removeAsStrikethrough || !S.removed[t.key]);
+      const eArr = [];
+      const total = filt.reduce((s,t) => {
+        if(S.removed[t.key]) return s;
+        const ep = getScale(effP(t.harga_jual, t.key));
+        if(ep) eArr.push(ep);
+        return s + ep;
+      }, 0);
+      const cls = filter==='Income' ? 'c-in' : filter==='Outcome' ? 'c-out' : '';
+      const hasAdj = txs.some((_,i) => (S.adj[tKey(p,i)]||0)!==0);
+      bar.innerHTML = `<div class="sb-it"><span class="sb-l">Ditampilkan</span><span class="sb-v">${dispRows.length} transaksi</span></div><div class="sb-it"><span class="sb-l">Total Efektif</span><span class="sb-v ${cls}" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${eArr.join('+')||0}',event)">${fmt(total,true)}</span></div>${hasAdj?'<div class="sb-it"><span class="sb-l">⚠ Penyesuaian</span><span class="sb-v" style="font-size:.72rem;color:var(--accent)">Ada harga diubah</span></div>':''}`;
+    }
+  });
+
+  // 2. Vouchers (Outcome)
+  const vArr = [];
+  const vTotal = vouchers.reduce((s, v, i) => {
+    const key = 'voucher|' + i;
+    if(S.removed[key]) return s;
+    const ep = getScale(effP(v.price, key) * (Number(v.qty) || 0));
+    if(ep) { vArr.push(ep); gOut += ep; gOArr.push(ep); }
+    return s + ep;
+  }, 0);
+
+  // Update Voucher header if exists
+  $$('.lv-group-name').forEach(n => {
+    if(n.textContent === 'Voucher'){
+      const sibling = n.parentElement.querySelector('.lv-group-meta');
+      if(sibling) {
+        const visibleCount = vouchers.filter((_, i) => S.settings.removeAsStrikethrough || !S.removed['voucher|'+i]).length;
+        sibling.innerHTML = `${visibleCount} produk &nbsp;·&nbsp; <span style="color:var(--accent);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${vArr.join('+')||0}',event)">${fmt(vTotal,true)}</span>`;
+      }
+    }
+  });
+
+  // 3. Tarik
+  let tInc=0, tOut=0;
+  const tIArr=[], tOArr=[];
+  tariks.forEach((t, i) => {
+    const key = 'tarik|' + i;
+    if(S.removed[key]) return;
+    const ep = getScale(effP(tNet(t), key));
+    if((t.type||'').toLowerCase() === 'income'){
+      tInc += ep; tIArr.push(ep);
+      gInc += ep; gIArr.push(ep);
+    } else {
+      tOut += ep; tOArr.push(ep);
+      gOut += ep; gOArr.push(ep);
+    }
+  });
+
+  // Update Tarik header if exists
+  $$('.lv-group-name').forEach(n => {
+    if(n.textContent === 'Tarik'){
+      const sibling = n.parentElement.querySelector('.lv-group-meta');
+      if(sibling) {
+        const visibleCount = tariks.filter((_, i) => S.settings.removeAsStrikethrough || !S.removed['tarik|'+i]).length;
+        sibling.innerHTML = `${visibleCount} transaksi &nbsp;·&nbsp; <span style="color:var(--income);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${tIArr.join('+')||0}',event)">${fmt(tInc,true)}</span> / <span style="color:var(--outcome);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${tOArr.join('+')||0}',event)">${fmt(tOut,true)}</span>`;
+      }
+    }
+  });
+
+  // 4. Global Bar & Breakdown
+  const totalsByDate = {};
+  const addT = (d, type, val, arr) => {
+    const dt = d || 'Lainnya';
+    if(!totalsByDate[dt]) totalsByDate[dt] = { inc:0, out:0, iArr:[], oArr:[] };
+    if(type==='inc') { totalsByDate[dt].inc += val; totalsByDate[dt].iArr.push(val); }
+    else { totalsByDate[dt].out += val; totalsByDate[dt].oArr.push(val); }
+  };
+
+  // Re-calculate breakdown for global bar
+  Object.entries(notif).forEach(([p, txs]) => {
+    txs.forEach((t, i) => {
+      if(S.removed[tKey(p, i)]) return;
+      const ep = getScale(effP(t.harga_jual, tKey(p, i)));
+      addT(t.date, t.category==='Income'?'inc':'out', ep);
+    });
+    (S.extras[p]||[]).forEach(x => {
+      if(S.removed[x.key]) return;
+      const ep = getScale(effP(x.harga_jual, x.key));
+      addT(x.date, x.category==='Income'?'inc':'out', ep);
+    });
+  });
+  vouchers.forEach((v, i) => {
+    const key = 'voucher|' + i;
+    if(S.removed[key]) return;
+    const ep = getScale(effP(v.price, key) * (Number(v.qty) || 0));
+    addT(v.date, 'out', ep);
+  });
+  tariks.forEach((t, i) => {
+    const key = 'tarik|' + i;
+    if(S.removed[key]) return;
+    const ep = getScale(effP(tNet(t), key));
+    addT(t.date, (t.type||'').toLowerCase()==='income'?'inc':'out', ep);
+  });
+
+  const gbar = document.getElementById('lv-global-bar');
+  if(gbar){
+    let barHtml = `
+      <div class="sb-it"><span class="sb-l">Total Masuk</span><span class="sb-v c-in" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${gIArr.join('+')||0}',event)">${fmt(gInc,true)}</span></div>
+      <div class="sb-it"><span class="sb-l">Total Keluar</span><span class="sb-v c-out" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${gOArr.join('+')||0}',event)">${fmt(gOut,true)}</span></div>`;
+    
+    const dKeys = Object.keys(totalsByDate);
+    if(dKeys.length > 1){
+      dKeys.sort((a,b)=>S.settings.sortOrder==='desc'?b.localeCompare(a):a.localeCompare(b)).forEach(d => {
+        const st = totalsByDate[d];
+        let dLabel = d;
+        try { dLabel = new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'}); } catch(e){}
+        barHtml += `<div class="sb-it sb-breakdown" style="border-left:1px solid var(--border);padding-left:12px;margin-left:8px;">
+          <span class="sb-l">${dLabel}</span>
+          <span class="sb-v" style="font-size:.72rem;"><span class="c-in" title="Copy Masuk" onclick="copyEq(this,'${st.iArr.join('+')||0}',event)">${fmt(st.inc,true)}</span> / <span class="c-out" title="Copy Keluar" onclick="copyEq(this,'${st.oArr.join('+')||0}',event)">${fmt(st.out,true)}</span></span>
+        </div>`;
+      });
+    }
+    gbar.innerHTML = barHtml;
+  }
+  
+  saveState();
+  // Also update Card View Summary if on that page
+  if(document.getElementById('page-summary')&&document.getElementById('page-summary').classList.contains('active')) buildSummaryPage();
+}
+
+function refreshSbOnly(pkg){ refreshAllTotals(); }
 
 function refreshVoucherRow(i,item,table){
   const key='voucher|'+i;
@@ -2147,72 +2868,13 @@ function refreshVoucherRow(i,item,table){
   const vEl=document.getElementById('vamt-'+i);if(vEl){vEl.textContent=fmtVoucherPrice(ep,item.qty);vEl.classList.toggle('changed',d!==0);}
   const tEl=document.getElementById('vtot-'+i);if(tEl)tEl.textContent=fmt(ep*item.qty);
   $$('[data-voucher-sub="'+i+'"]').forEach(s=>s.textContent=fmt(ep));
-  refreshVoucherSummaries();
-}
-
-function refreshSbOnly(pkg){
-  const txns=(S.data.notif||{})[pkg]||[];
-  const bar=document.getElementById('sb-'+pkg);
-  if(bar){
-    const filter=S.activeFilter[pkg]||'all';
-    const extras=S.extras[pkg]||[];
-    const allRows=[...txns.map((t,i)=>({...t,key:tKey(pkg,i)})).filter(t=>S.settings.removeAsStrikethrough || !S.removed[t.key]), ...extras];
-    const filt=filter==='all'?allRows:allRows.filter(t=>t.category===filter);
-    
-    // fix total mixing inc/out AND fix sum precision
-    const eArr=[];
-    const total=filt.reduce((s,t)=>{ if(S.removed[t.key]) return s; const ep=getScale(effP(t.harga_jual,t.key)); if(ep) eArr.push(ep); return s+ep; },0);
-    const cls=filter==='Income'?'c-in':filter==='Outcome'?'c-out':'';
-    const hasAdj=txns.some((_,i)=>(S.adj[tKey(pkg,i)]||0)!==0);
-    bar.innerHTML=`<div class="sb-it"><span class="sb-l">Ditampilkan</span><span class="sb-v">${filt.length} transaksi</span></div><div class="sb-it"><span class="sb-l">Total Efektif</span><span class="sb-v ${cls}" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${eArr.join('+')||0}',event)">${fmt(total,true)}</span></div>${hasAdj?'<div class="sb-it"><span class="sb-l">⚠ Penyesuaian</span><span class="sb-v" style="font-size:.72rem;color:var(--accent)">Ada harga diubah</span></div>':''}`;
-  }
-  // refresh global bar in list view
-  const gbar=document.getElementById('lv-global-bar');
-  if(gbar){
-    const notif=S.data.notif||{};
-    let tInc=0,tOut=0; const iArr=[], oArr=[];
-    Object.entries(notif).forEach(([p,txs])=>{
-      const ext=S.extras[p]||[];
-      const validRows=[...txs.map((t,i)=>({...t,key:tKey(p,i)})).filter(t=>S.settings.removeAsStrikethrough || !S.removed[t.key]),...ext];
-      validRows.forEach(t=>{ if(S.removed[t.key]) return; const ep=getScale(effP(t.harga_jual,t.key)); if(t.category==='Income'){ tInc+=ep; if(ep) iArr.push(ep); } else { tOut+=ep; if(ep) oArr.push(ep); }});
-    });
-    const vArr=[]; const gVou=getVoucherGroups().flatMap(g=>g.items).reduce((s,entry)=>{
-      if(S.removed[entry.key]) return s;
-      const ep=getScale(effP(entry.item.price,entry.key)*(Number(entry.item.qty)||0));
-      if(ep) vArr.push(ep);
-      return s+ep;
-    },0);
-    const tNet=t=>S.settings.tarikNetAdm?tarikNet(t):t.jumtar;
-    const tArr=[]; const gTar=(S.data.tarik||[]).reduce((s,t,i)=>{ if(S.removed['tarik|'+i]) return s; const ep=getScale(effP(tNet(t),'tarik|'+i)); if(ep) tArr.push(ep); return s+ep; },0);
-    gbar.innerHTML=`<div class="sb-it"><span class="sb-l">Masuk</span><span class="sb-v c-in" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${iArr.join('+')||0}',event)">${fmt(tInc,true)}</span></div><div class="sb-it"><span class="sb-l">Keluar</span><span class="sb-v c-out" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${oArr.join('+')||0}',event)">${fmt(tOut,true)}</span></div><div class="sb-it"><span class="sb-l">Voucher</span><span class="sb-v" style="color:var(--accent);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${vArr.join('+')||0}',event)">${fmt(gVou,true)}</span></div><div class="sb-it"><span class="sb-l">Tarik</span><span class="sb-v" style="cursor:pointer" title="Salin formula" onclick="copyEq(this,'${tArr.join('+')||0}',event)">${fmt(gTar,true)}</span></div>`;
-    
-    // update group header totals with inc/out split
-    Object.entries(notif).forEach(([p,txs])=>{
-      const meta=getMeta(p);
-      const ext=S.extras[p]||[];
-      const validRows=[...txs.map((t,i)=>({...t,key:tKey(p,i)})).filter(t=>S.settings.removeAsStrikethrough || !S.removed[t.key]),...ext];
-      let iSum=0, oSum=0;
-      const tIArr=[], tOArr=[];
-      validRows.forEach(t=>{
-         if(S.removed[t.key]) return;
-         const ep=getScale(effP(t.harga_jual,t.key));
-         if(t.category==='Income'){ iSum+=ep; if(ep) tIArr.push(ep); }
-         else { oSum+=ep; if(ep) tOArr.push(ep); }
-      });
-      
-      $$('.lv-group-name').forEach(n=>{
-        if(n.textContent===meta.name){
-          const sibling=n.parentElement.querySelector('.lv-group-meta');
-          if(sibling) sibling.innerHTML=`${validRows.length} transaksi &nbsp;·&nbsp; <span style="color:var(--income);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${tIArr.join('+')||0}',event)">${fmt(iSum,true)}</span> / <span style="color:var(--outcome);cursor:pointer" title="Salin formula" onclick="copyEq(this,'${tOArr.join('+')||0}',event)">${fmt(oSum,true)}</span>`;
-        }
-      });
-    });
-  }
+  refreshAllTotals();
 }
 
 /* ── LOCK ── */
 function toggleLock(key){
   S.locked[key]=!S.locked[key];
+  saveState();
   $$('[data-key="'+key+'"]').forEach(row=>row.classList.toggle('locked',!!S.locked[key]));
 }
 
@@ -2499,6 +3161,8 @@ function buildTarikPage(){
     togCenter.checked=S.settings.centerFocus;
     togClear.checked=S.settings.clearView;
     togRmStrike.checked=S.settings.removeAsStrikethrough;
+    const selEditMode=$('#sel-edit-mode');
+    if(selEditMode) selEditMode.value=S.settings.editMode||'dblclick';
     document.body.setAttribute('data-view-style', S.settings.viewStyle);
     document.body.setAttribute('data-clear-view', S.settings.clearView);
   };
@@ -2600,6 +3264,17 @@ function buildTarikPage(){
     persistPrefs();
     if(S.data && S.viewMode==='list') buildListView();
   });
+
+  // sticky bar
+  const togStickyBar=$('#tog-sticky-bar');
+  if(togStickyBar){
+    togStickyBar.checked=!!S.settings.stickyBar;
+    togStickyBar.addEventListener('change',()=>{
+      S.settings.stickyBar=togStickyBar.checked;
+      persistPrefs();
+      if(S.viewMode==='list') buildListView();
+    });
+  }
 
   // reset prices
   $('#btn-reset-prices').addEventListener('click',()=>{
@@ -3111,16 +3786,7 @@ function getSheetRows(tabId){
 
 /* ── RESET ── */
 $('#reset-btn').addEventListener('click',()=>{
-  S.data=null;S.adj={};S.locked={};S.activeFilter={};S.notes={};S.timeMod={};S.extras={};S.removed={};
-  $$('[data-app-tab]').forEach(e=>e.remove());
-  $$('[data-app-page]').forEach(e=>e.remove());
-  syncViewToggleButtons();
-  $('#tabs-bar').style.display='none';$('#pages').style.display='none';
-  $('#page-listview').style.display='none';$('#page-sheetview').style.display='none';
-  $('#app').style.display='none';$('#upload-screen').style.display='flex';
-  $('#ul-error').textContent='';$('#file-input').value='';$('#header-date').textContent='—';
-  blurKb();
-  syncHeaderReveal();
+  if(confirm('Hapus semua data dan reset aplikasi?')) clearAllData();
 });
 
 /* ════════════════════════════════════════════
@@ -3203,12 +3869,14 @@ $('#reset-btn').addEventListener('click',()=>{
   }
 
   /* ── SPEAK ── */
-  function speak(text, urgent){
+  function speak(text, urgent, rowKey){
     if(!TTS.enabled || !synth) return;
     if(!text) return;
-    // debounce — don't repeat same phrase immediately
-    if(!urgent && text === lastSpoken) return;
-    lastSpoken = text;
+    // For navigation: skip if same text AND same row (not a new row)
+    // urgent=true (from adjust buttons) always speaks regardless
+    const dedupeKey = (rowKey||'') + '::' + text;
+    if(!urgent && dedupeKey === lastSpoken) return;
+    lastSpoken = urgent ? lastSpoken : dedupeKey; // urgent doesn't poison cache
 
     clearTimeout(speakTimer);
     speakTimer = setTimeout(()=>{
@@ -3272,7 +3940,7 @@ $('#reset-btn').addEventListener('click',()=>{
     const ep  = scaleForTTS(effP(txn.harga_jual, key));
     const cat = txn.category === 'Income' ? 'income' : 'outcome';
     const appName = TTS.mode === 'full' ? getMeta(pkg).name : '';
-    speak(buildText(ep, cat, appName));
+    speak(buildText(ep, cat, appName), false, key);
   };
 
   /* speak after price adjustment */
@@ -3469,6 +4137,420 @@ $('#reset-btn').addEventListener('click',()=>{
     }, 80);
   }, true);
 })();
+/* ════════════════════════════════════════════
+   EXPORT & SAVE ENGINE
+════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+/* ── HELPERS ── */
+function download(filename, content, mime){
+  const blob = new Blob([content], {type: mime});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+function showStatus(msg, ok=true){
+  const el = $('#export-status');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.color = ok ? 'var(--income)' : 'var(--outcome)';
+  el.style.opacity = '1';
+  setTimeout(()=>{ el.style.opacity='0'; }, 2800);
+}
+
+function esc(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }
+
+function getSafeDate(){
+  return (S.data&&S.data.date) ? S.data.date : new Date().toISOString().slice(0,10);
+}
+
+/* ── SESSION SAVE ── */
+function buildSession(){
+  return {
+    _type:    'historiku-session',
+    _version: 2,
+    savedAt:  new Date().toISOString(),
+    date:     getSafeDate(),
+    adj:      S.adj,
+    locked:   S.locked,
+    removed:  S.removed,
+    extras:   S.extras,
+    notes:    S.notes,
+    timeMod:  S.timeMod,
+    settings: S.settings,
+    viewMode: S.viewMode,
+  };
+}
+
+$('#btn-save-session').addEventListener('click', ()=>{
+  if(!S.data){ showStatus('Belum ada data.', false); return; }
+  const json = JSON.stringify(buildSession(), null, 2);
+  download('historiku-session-'+getSafeDate()+'.json', json, 'application/json');
+  showStatus('✓ Sesi disimpan.');
+});
+
+$('#btn-load-session').addEventListener('click', ()=>{
+  $('#session-file-input').click();
+});
+
+$('#session-file-input').addEventListener('change', function(){
+  const file = this.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    let sess;
+    try { sess = JSON.parse(ev.target.result); }
+    catch(e){ showStatus('File sesi tidak valid.', false); return; }
+    if(sess._type !== 'historiku-session'){ showStatus('Bukan file sesi HistoriKu.', false); return; }
+    if(!S.data){ showStatus('Upload data JSON terlebih dahulu.', false); return; }
+
+    if(sess.adj)     Object.assign(S.adj,     sess.adj);
+    if(sess.locked)  Object.assign(S.locked,  sess.locked);
+    if(sess.removed) Object.assign(S.removed, sess.removed);
+    if(sess.extras)  Object.assign(S.extras,  sess.extras);
+    if(sess.notes)   Object.assign(S.notes,   sess.notes);
+    if(sess.timeMod) Object.assign(S.timeMod, sess.timeMod);
+    if(sess.settings) Object.assign(S.settings, sess.settings);
+
+    if(S.viewMode==='list') buildListView();
+    else if(S.viewMode==='sheet') window.buildSheetView&&window.buildSheetView();
+    else {
+      buildSummaryPage();
+      Object.keys(S.data.notif||{}).forEach(pkg=>refreshCardList(pkg));
+      buildVoucherPage(); buildTarikPage();
+    }
+    showStatus('✓ Sesi dimuat.');
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+/* ── CSV EXPORT ── */
+function buildCSV(pkg, txns){
+  const meta = getMeta(pkg);
+  const extras = (S.extras[pkg]||[]);
+  const origRows = txns.map((t,i)=>({...t,key:tKey(pkg,i),isExtra:false})).filter(t=>!S.removed[t.key]);
+  const extraRows = extras.map(x=>({...x,isExtra:true}));
+  const allRows = [...origRows,...extraRows].sort((a,b)=>b.time.localeCompare(a.time));
+
+  const lines = [];
+  lines.push(['#','Aplikasi','Waktu','Kategori','Nilai Asli','Penyesuaian','Nilai Efektif','Catatan','Status'].map(esc).join(','));
+  allRows.forEach((t,i)=>{
+    const ep    = effP(t.harga_jual, t.key);
+    const delta = S.adj[t.key]||0;
+    lines.push([
+      i+1, meta.name, S.timeMod[t.key]||t.time,
+      t.category==='Income'?'Masuk':'Keluar',
+      t.harga_jual, delta, ep,
+      S.notes[t.key]||'',
+      S.locked[t.key]?'Terkunci':t.isExtra?'Tambahan':'',
+    ].map(esc).join(','));
+  });
+  return lines.join('\r\n');
+}
+
+function exportCSVAll(){
+  if(!S.data){ showStatus('Belum ada data.', false); return; }
+  const notif = S.data.notif||{};
+  Object.entries(notif).forEach(([pkg,txns])=>{
+    const csv = buildCSV(pkg, txns);
+    download(`historiku-${getMeta(pkg).name}-${getSafeDate()}.csv`, '\uFEFF'+csv, 'text/csv;charset=utf-8');
+  });
+
+  /* Voucher CSV */
+  const vouchers = S.data.voucher||[];
+  if(vouchers.length){
+    const lines=[['#','Produk','Qty','Harga Asli','Penyesuaian','Harga Efektif','Total'].map(esc).join(',')];
+    vouchers.forEach((v,i)=>{
+      const key='voucher|'+i; const ep=effP(v.price,key); const d=S.adj[key]||0;
+      lines.push([i+1,v.product,v.qty,v.price,d,ep,ep*v.qty].map(esc).join(','));
+    });
+    download(`historiku-Voucher-${getSafeDate()}.csv`, '\uFEFF'+lines.join('\r\n'), 'text/csv;charset=utf-8');
+  }
+
+  /* Tarik CSV */
+  const tariks = S.data.tarik||[];
+  if(tariks.length){
+    const lines=[['#','Waktu','Tipe','Nominal Asli','Penyesuaian','Nominal Efektif','Admin'].map(esc).join(',')];
+    tariks.forEach((t,i)=>{
+      const key='tarik|'+i;
+      const base=S.settings.tarikNetAdm?tarikNet(t):t.jumtar;
+      const ep=effP(base,key); const d=S.adj[key]||0;
+      lines.push([i+1,t.time,(t.type||'').toLowerCase()==='income'?'Masuk':'Keluar',t.jumtar,d,ep,t.adm].map(esc).join(','));
+    });
+    download(`historiku-Tarik-${getSafeDate()}.csv`, '\uFEFF'+lines.join('\r\n'), 'text/csv;charset=utf-8');
+  }
+  showStatus('✓ CSV diunduh.');
+}
+
+$('#btn-export-csv-all').addEventListener('click', exportCSVAll);
+
+/* single-app CSV picker */
+$('#btn-export-csv-sel').addEventListener('click', ()=>{
+  const sel = $('#sel-export-app');
+  sel.style.display = sel.style.display==='none' ? '' : 'none';
+  if(sel.style.display==='' && S.data){
+    sel.innerHTML='<option value="">— semua —</option>';
+    Object.keys(S.data.notif||{}).forEach(pkg=>{
+      const o=document.createElement('option'); o.value=pkg; o.textContent=getMeta(pkg).name; sel.appendChild(o);
+    });
+    ['voucher','tarik'].forEach(k=>{
+      const o=document.createElement('option');o.value=k;o.textContent=k[0].toUpperCase()+k.slice(1);sel.appendChild(o);
+    });
+  }
+});
+
+$('#sel-export-app').addEventListener('change', function(){
+  const pkg = this.value;
+  if(!pkg){ exportCSVAll(); return; }
+  if(!S.data){ return; }
+  if(pkg==='voucher'){
+    const vouchers=S.data.voucher||[];
+    const lines=[['#','Produk','Qty','Harga Asli','Penyesuaian','Harga Efektif','Total'].map(esc).join(',')];
+    vouchers.forEach((v,i)=>{const key='voucher|'+i;const ep=effP(v.price,key);const d=S.adj[key]||0;lines.push([i+1,v.product,v.qty,v.price,d,ep,ep*v.qty].map(esc).join(','));});
+    download(`historiku-Voucher-${getSafeDate()}.csv`,'\uFEFF'+lines.join('\r\n'),'text/csv;charset=utf-8');
+  } else if(pkg==='tarik'){
+    const tariks=S.data.tarik||[];
+    const lines=[['#','Waktu','Tipe','Nominal Asli','Penyesuaian','Nominal Efektif','Admin'].map(esc).join(',')];
+    tariks.forEach((t,i)=>{const key='tarik|'+i;const base=S.settings.tarikNetAdm?tarikNet(t):t.jumtar;const ep=effP(base,key);const d=S.adj[key]||0;lines.push([i+1,t.time,(t.type||'').toLowerCase()==='income'?'Masuk':'Keluar',t.jumtar,d,ep,t.adm].map(esc).join(','));});
+    download(`historiku-Tarik-${getSafeDate()}.csv`,'\uFEFF'+lines.join('\r\n'),'text/csv;charset=utf-8');
+  } else {
+    const txns=(S.data.notif||{})[pkg]||[];
+    download(`historiku-${getMeta(pkg).name}-${getSafeDate()}.csv`,'\uFEFF'+buildCSV(pkg,txns),'text/csv;charset=utf-8');
+  }
+  showStatus('✓ CSV diunduh.');
+  this.style.display='none';
+});
+
+/* ════════════════════════════════════════════
+   AI REPORT BUILDER
+   Format: structured Markdown with full context
+   so an AI can understand it without any
+   additional explanation from the user.
+════════════════════════════════════════════ */
+function buildAIReport(){
+  if(!S.data) return null;
+  const notif    = S.data.notif    || {};
+  const vouchers = S.data.voucher  || [];
+  const tariks   = S.data.tarik    || [];
+  const incNotes = !!$('#chk-ai-notes')   ?.checked;
+  const incRem   = !!$('#chk-ai-removed') ?.checked;
+  const incAdj   = !!$('#chk-ai-adj')     ?.checked;
+  const date     = getSafeDate();
+
+  const fmtRaw = n => {
+    const r = Math.round(Number(n));
+    return r.toLocaleString('id-ID');
+  };
+
+  const lines = [];
+
+  /* ── HEADER ── */
+  lines.push(`# Laporan Transaksi Harian — HistoriKu`);
+  lines.push(`**Tanggal:** ${date}  `);
+  lines.push(`**Dibuat:** ${new Date().toLocaleString('id-ID')}  `);
+  lines.push(`**Sumber:** history.json dari aplikasi HistoriKu  `);
+  lines.push('');
+  lines.push('> **Instruksi untuk AI:** File ini berisi data transaksi keuangan harian dari beberapa dompet digital dan marketplace. Setiap grup mewakili satu aplikasi. Kolom "Nilai Efektif" adalah nilai yang sudah disesuaikan pengguna. Silakan analisis pola, anomali, total, dan berikan ringkasan yang bermakna.');
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+
+  /* ── EXECUTIVE SUMMARY ── */
+  let grandInc=0, grandOut=0, txnCount=0;
+  Object.entries(notif).forEach(([pkg,txns])=>{
+    const extras=(S.extras[pkg]||[]);
+    const origRows=txns.map((t,i)=>({...t,key:tKey(pkg,i)})).filter(t=>incRem||!S.removed[t.key]);
+    const allRows=[...origRows,...extras];
+    allRows.forEach(t=>{
+      const ep=effP(t.harga_jual,t.key);
+      if(t.category==='Income') grandInc+=ep; else grandOut+=ep;
+      txnCount++;
+    });
+  });
+
+  const vTotal = vouchers.reduce((s,v,i)=>{ if(!incRem&&S.removed['voucher|'+i]) return s; return s+effP(v.price,'voucher|'+i)*v.qty; },0);
+  const tTotal = tariks.reduce((s,t,i)=>{ const base=S.settings.tarikNetAdm?tarikNet(t):t.jumtar; return s+effP(base,'tarik|'+i); },0);
+  const net = grandInc - grandOut;
+
+  lines.push('## Ringkasan Eksekutif');
+  lines.push('');
+  lines.push(`| Metrik | Nilai |`);
+  lines.push(`|--------|-------|`);
+  lines.push(`| Total Pemasukan | **Rp ${fmtRaw(grandInc)}** |`);
+  lines.push(`| Total Pengeluaran | **Rp ${fmtRaw(grandOut)}** |`);
+  lines.push(`| Selisih Bersih | **${net>=0?'+':''}Rp ${fmtRaw(net)}** |`);
+  lines.push(`| Jumlah Transaksi | ${txnCount} |`);
+  lines.push(`| Total Voucher | Rp ${fmtRaw(vTotal)} |`);
+  lines.push(`| Total Tarik | Rp ${fmtRaw(tTotal)} |`);
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+
+  /* ── PER-APP SECTIONS ── */
+  lines.push('## Detail Per Aplikasi');
+  lines.push('');
+
+  Object.entries(notif).forEach(([pkg,txns])=>{
+    const meta   = getMeta(pkg);
+    const extras = (S.extras[pkg]||[]);
+    const origRows = txns.map((t,i)=>({...t,key:tKey(pkg,i),isExtra:false}))
+                         .filter(t=>incRem||!S.removed[t.key]);
+    const allRows  = [...origRows,...extras]
+                         .sort((a,b)=>a.time.localeCompare(b.time));
+
+    const incRows  = allRows.filter(t=>t.category==='Income');
+    const outRows  = allRows.filter(t=>t.category==='Outcome');
+    const appInc   = incRows.reduce((s,t)=>s+effP(t.harga_jual,t.key),0);
+    const appOut   = outRows.reduce((s,t)=>s+effP(t.harga_jual,t.key),0);
+    const appNet   = appInc - appOut;
+    const hasAdj   = allRows.some(t=>(S.adj[t.key]||0)!==0);
+
+    lines.push(`### ${meta.icon} ${meta.name}`);
+    lines.push('');
+    lines.push(`- **Pemasukan:** Rp ${fmtRaw(appInc)} (${incRows.length} transaksi)`);
+    lines.push(`- **Pengeluaran:** Rp ${fmtRaw(appOut)} (${outRows.length} transaksi)`);
+    lines.push(`- **Selisih:** ${appNet>=0?'+':''}Rp ${fmtRaw(appNet)}`);
+    if(hasAdj && incAdj) lines.push(`- ⚠️ **Ada penyesuaian manual** pada beberapa nilai`);
+    lines.push('');
+
+    /* transaction table */
+    const hdCols = ['#','Waktu','Kategori','Nilai Asli (Rp)','Nilai Efektif (Rp)'];
+    if(incAdj)  hdCols.push('Adj (Rp)');
+    if(incNotes) hdCols.push('Catatan');
+    if(incRem)   hdCols.push('Status');
+
+    lines.push('| '+hdCols.join(' | ')+' |');
+    lines.push('|'+hdCols.map(()=>'---').join('|')+'|');
+
+    allRows.forEach((t,i)=>{
+      const ep    = effP(t.harga_jual, t.key);
+      const delta = S.adj[t.key]||0;
+      const time  = S.timeMod[t.key]||t.time;
+      const note  = S.notes[t.key]||'';
+      const stat  = S.removed[t.key]?'🗑 Dihapus': S.locked[t.key]?'🔒 Terkunci': t.isExtra?'➕ Tambahan':'';
+      const row   = [
+        i+1, time,
+        t.category==='Income'?'Masuk':'Keluar',
+        fmtRaw(t.harga_jual),
+        fmtRaw(ep),
+      ];
+      if(incAdj)   row.push(delta!==0?(delta>0?'+':'')+fmtRaw(delta):'—');
+      if(incNotes) row.push(note||'—');
+      if(incRem)   row.push(stat||'—');
+      lines.push('| '+row.join(' | ')+' |');
+    });
+    lines.push('');
+
+    /* per-hour distribution (useful pattern for AI) */
+    const byHour = {};
+    allRows.forEach(t=>{
+      const h = (S.timeMod[t.key]||t.time).split(':')[0];
+      if(!byHour[h]) byHour[h]={in:0,out:0,count:0};
+      const ep=effP(t.harga_jual,t.key);
+      if(t.category==='Income') byHour[h].in+=ep; else byHour[h].out+=ep;
+      byHour[h].count++;
+    });
+    const hourKeys = Object.keys(byHour).sort();
+    if(hourKeys.length > 1){
+      lines.push('<details>');
+      lines.push(`<summary>Distribusi Per Jam — ${meta.name}</summary>`);
+      lines.push('');
+      lines.push('| Jam | Masuk (Rp) | Keluar (Rp) | Jml |');
+      lines.push('|-----|-----------|------------|-----|');
+      hourKeys.forEach(h=>{
+        const b=byHour[h];
+        lines.push(`| ${h}:xx | ${b.in?fmtRaw(b.in):'—'} | ${b.out?fmtRaw(b.out):'—'} | ${b.count} |`);
+      });
+      lines.push('');
+      lines.push('</details>');
+      lines.push('');
+    }
+    lines.push('---');
+    lines.push('');
+  });
+
+  /* ── VOUCHER ── */
+  if(vouchers.length){
+    lines.push('## 🎟️ Voucher');
+    lines.push('');
+    const vRows = vouchers.map((v,i)=>({...v,key:'voucher|'+i}))
+                          .filter(v=>incRem||!S.removed[v.key]);
+    const vGrand = vRows.reduce((s,v)=>s+effP(v.price,v.key)*v.qty,0);
+    lines.push(`**Total:** Rp ${fmtRaw(vGrand)} dari ${vRows.length} produk  `);
+    lines.push('');
+    lines.push('| # | Produk | Qty | @Harga (Rp) | @Efektif (Rp) | Total (Rp) |');
+    lines.push('|---|--------|-----|------------|--------------|-----------|');
+    vRows.forEach((v,i)=>{
+      const ep=effP(v.price,v.key);
+      lines.push(`| ${i+1} | ${v.product} | ${v.qty} | ${fmtRaw(v.price)} | ${fmtRaw(ep)} | ${fmtRaw(ep*v.qty)} |`);
+    });
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+  }
+
+  /* ── TARIK ── */
+  if(tariks.length){
+    lines.push('## 💸 Tarik');
+    lines.push('');
+    const tarikRows=tariks.map((t,i)=>({...t,key:'tarik|'+i}));
+    const tInc  = tarikRows.filter(t=>(t.type||'').toLowerCase()==='income').reduce((s,t)=>s+effP(S.settings.tarikNetAdm?tarikNet(t):t.jumtar,t.key),0);
+    const tOut  = tarikRows.filter(t=>(t.type||'').toLowerCase()!=='income').reduce((s,t)=>s+effP(S.settings.tarikNetAdm?tarikNet(t):t.jumtar,t.key),0);
+    lines.push(`**Penerimaan:** Rp ${fmtRaw(tInc)}  **Penarikan:** Rp ${fmtRaw(tOut)}  `);
+    if(S.settings.tarikNetAdm) lines.push('*Nilai sudah dipotong/ditambah biaya admin.*  ');
+    lines.push('');
+    lines.push('| # | Waktu | Tipe | Nominal (Rp) | Admin (Rp) | Efektif (Rp) |');
+    lines.push('|---|-------|------|-------------|-----------|------------|');
+    tarikRows.forEach((t,i)=>{
+      const isInc=(t.type||'').toLowerCase()==='income';
+      const base=S.settings.tarikNetAdm?tarikNet(t):t.jumtar;
+      const ep=effP(base,t.key);
+      lines.push(`| ${i+1} | ${t.time} | ${isInc?'Masuk':'Keluar'} | ${fmtRaw(t.jumtar)} | ${fmtRaw(t.adm)} | ${fmtRaw(ep)} |`);
+    });
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+  }
+
+  /* ── AI PROMPT HINTS ── */
+  lines.push('## Saran Pertanyaan untuk AI');
+  lines.push('');
+  lines.push('Tempel laporan ini ke AI dan tanyakan salah satu di bawah:');
+  lines.push('');
+  lines.push('1. "Aplikasi mana yang memiliki pengeluaran tertinggi hari ini?"');
+  lines.push('2. "Jam berapa aktivitas transaksi paling sibuk?"');
+  lines.push('3. "Apakah ada transaksi yang tampak anomali atau tidak wajar?"');
+  lines.push('4. "Berikan ringkasan keuangan hari ini dalam 3 kalimat."');
+  lines.push('5. "Apa rasio pemasukan vs pengeluaran per aplikasi?"');
+  lines.push('6. "Apakah total voucher sebanding dengan pengeluaran keseluruhan?"');
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+  lines.push(`*Diekspor oleh HistoriKu pada ${new Date().toLocaleString('id-ID')}*`);
+
+  return lines.join('\n');
+}
+
+$('#btn-ai-copy').addEventListener('click', ()=>{
+  if(!S.data){ showStatus('Belum ada data.', false); return; }
+  const md = buildAIReport();
+  navigator.clipboard.writeText(md).then(()=>showStatus('✓ Laporan AI disalin ke clipboard.')).catch(()=>showStatus('Gagal menyalin.', false));
+});
+
+$('#btn-ai-download').addEventListener('click', ()=>{
+  if(!S.data){ showStatus('Belum ada data.', false); return; }
+  const md = buildAIReport();
+  download(`historiku-AI-report-${getSafeDate()}.md`, md, 'text/markdown;charset=utf-8');
+  showStatus('✓ Laporan AI diunduh.');
+});
+
+})(); /* end export IIFE */
+
+/* ── SCROLL TOP ── */
+const stBtn=$('#scroll-top');
 window.addEventListener('scroll',()=>stBtn.classList.toggle('show',window.scrollY>240));
 stBtn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
 </script>
