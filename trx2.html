@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>QR Transaksi</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F7F6F2;--surface:#fff;--s2:#F0EDE6;--s3:#E6E2D8;
+  --text:#1C1917;--t2:#6B6760;--t3:#A8A39A;
+  --border:#E2DDD5;--b2:#C8C3B8;
+  --acc:#1C1917;--ai:#F7F6F2;
+  --green:#166534;--red:#9F1239;
+  --r:14px;--r2:10px;--r3:24px;
+  --ff:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+}
+body,html{margin:0;padding:0;background:var(--bg);font-family:var(--ff);color:var(--text)}
+.wrap{max-width:420px;margin:0 auto;padding:.75rem 1rem 3rem}
+
+/* ── INTRO ── */
+.iov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:flex;align-items:flex-end;justify-content:center;animation:fIn .25s ease}
+@keyframes fIn{from{opacity:0}to{opacity:1}}
+.ish{background:var(--surface);border-radius:24px 24px 0 0;padding:8px 0 0;width:100%;max-width:480px;animation:sUp .3s cubic-bezier(.4,0,.2,1)}
+@keyframes sUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ihdl{width:40px;height:4px;background:var(--b2);border-radius:2px;margin:0 auto 20px}
+.isl{padding:0 28px 4px;text-align:center;display:none;animation:si .22s ease}
+.isl.act{display:block}
+.iem{font-size:52px;margin-bottom:14px;line-height:1;display:block}
+.itl{font-size:20px;font-weight:600;margin:0 0 10px;letter-spacing:-.3px}
+.idc{font-size:14px;color:var(--t2);line-height:1.65;margin:0 0 10px}
+.iwrn{font-size:12px;background:#FFF7ED;color:#9A3412;border-radius:10px;padding:10px 14px;margin-bottom:4px;border:1px solid #FB923C;font-weight:500;line-height:1.5;text-align:left}
+.idts{display:flex;gap:6px;justify-content:center;margin:14px 0 18px}
+.idt{width:7px;height:7px;border-radius:50%;background:var(--b2);transition:all .22s}
+.idt.act{width:20px;border-radius:4px;background:var(--acc)}
+.ifoot{display:flex;flex-direction:column;gap:8px;padding:0 28px 36px}
+.imb{width:100%;padding:15px;border-radius:var(--r);background:var(--acc);color:var(--ai);border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--ff)}
+.iskp{background:none;border:none;color:var(--t3);font-size:13px;cursor:pointer;font-family:var(--ff);padding:4px}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.bkb{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text);transition:background .12s;flex-shrink:0}
+.bkb:hover{background:var(--s2)}
+.ht{flex:1;min-width:0}.ht h2{font-size:17px;font-weight:600;margin:0 0 1px;letter-spacing:-.3px}.ht p{font-size:12px;color:var(--t2);margin:0}
+.dots{display:flex;gap:5px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--b2);transition:all .28s cubic-bezier(.4,0,.2,1);flex-shrink:0}
+.dot.act{width:20px;border-radius:4px;background:var(--acc)}.dot.dn{background:var(--t3)}
+
+/* ── STEPS ── */
+.step{display:none}.step.act{display:block;animation:si .24s ease forwards}
+@keyframes si{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;box-shadow:var(--sh)}
+.lbl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t2);margin:0 0 8px;display:block}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;padding:2px 8px;border-radius:10px}
+
+/* ── CATEGORY ── */
+.catg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.catc{border:1px solid var(--border);border-radius:var(--r);padding:13px 12px;cursor:pointer;background:var(--surface);transition:border-color .14s,background .14s,transform .1s;display:flex;align-items:center;gap:10px;user-select:none}
+.catc:hover{border-color:var(--b2);background:var(--s2)}.catc.on{border-color:var(--acc);background:var(--s2)}.catc:active{transform:scale(.97)}
+.caticon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;letter-spacing:-.2px}
+.catnm{font-size:13px;font-weight:600;margin:0 0 1px;white-space:nowrap}.catsub{font-size:10px;color:var(--t3);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svclbl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t2);margin:0 0 8px;display:block}
+.svcg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.svcb{border:1px solid var(--border);border-radius:var(--r2);padding:11px 6px;cursor:pointer;background:var(--surface);font-size:12px;font-weight:500;color:var(--text);transition:all .12s;text-align:center;user-select:none;line-height:1.3}
+.svcb:hover{border-color:var(--b2);background:var(--s2)}.svcb.pk{background:var(--acc);color:var(--ai);border-color:var(--acc)}.svcb:active{transform:scale(.94)}
+.svctag{display:flex;align-items:center;gap:10px;border-radius:var(--r);padding:11px 14px;margin-bottom:16px}
+
+/* ── INPUT FIELDS ── */
+.fi{min-height:56px;border:1.5px solid var(--border);border-radius:var(--r2);padding:0 44px 0 14px;cursor:text;display:flex;align-items:center;background:var(--surface);transition:border-color .14s;position:relative;gap:6px;overflow:hidden}
+.fi.foc{border-color:var(--acc)}
+.real-input{width:100%;border:none;background:transparent;outline:none;font-size:18px;font-weight:500;font-family:var(--fm);color:var(--text);padding:0;flex:1;min-width:0}
+.real-input::placeholder{color:var(--t3);font-family:var(--ff);font-size:14px;font-weight:400}
+.rp-pre{font-size:16px;color:var(--text);font-weight:500;font-family:var(--fm);flex-shrink:0;display:none}
+.fi-clr{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:1px solid var(--border);border-radius:50%;display:none;align-items:center;justify-content:center;cursor:pointer;background:var(--s2);font-size:14px;color:var(--t2);transition:background .1s;z-index:10}
+.fi-clr:hover{background:var(--s3)}
+
+/* ── PRESETS & MODS ── */
+.prrow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.prc{border:1px solid var(--border);border-radius:var(--r3);padding:7px 14px;cursor:pointer;font-size:13px;font-weight:500;background:var(--surface);color:var(--text);transition:all .1s;white-space:nowrap;user-select:none;font-family:var(--ff)}
+.prc:hover{border-color:var(--b2);background:var(--s2)}.prc.on{background:var(--acc);color:var(--ai);border-color:var(--acc)}.prc:active{transform:scale(.93)}
+.mdr{display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px;animation:si .2s ease}
+.mdc{border:1px solid;border-radius:var(--r3);padding:5px 12px;cursor:pointer;font-size:12px;font-weight:600;transition:transform .08s;user-select:none;font-family:var(--ff)}
+.mdc:active{transform:scale(.91)}
+.mda{color:#166534;border-color:#86EFAC;background:#F0FDF4}.mds{color:#9F1239;border-color:#FCA5A5;background:#FFF1F2}
+
+/* ── NOTE ── */
+.nt{background:transparent;border:none;cursor:pointer;font-size:13px;color:var(--t2);font-family:var(--ff);display:flex;align-items:center;gap:7px;padding:5px 0;transition:color .1s}
+.nt:hover{color:var(--text)}.ntico{width:20px;height:20px;border:1px solid var(--b2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;background:var(--surface);flex-shrink:0}
+input[type=text]{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r2);font-size:14px;font-family:var(--ff);background:var(--surface);color:var(--text);outline:none;transition:border-color .14s;margin-top:8px}
+input[type=text]:focus{border-color:var(--acc)}
+
+/* ── MAIN BTN ── */
+.mb{width:100%;padding:15px;border-radius:var(--r);background:var(--acc);color:var(--ai);border:none;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;font-family:var(--ff)}
+.mb:hover{opacity:.87}.mb:active{transform:scale(.99)}.mb:disabled{opacity:.28;cursor:not-allowed}
+
+/* ── QR BANNER (ATTENTION) ── */
+.qr-banner{background:linear-gradient(130deg,#E65100,#FF6D00);border-radius:var(--r);padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;animation:banIn .5s cubic-bezier(.34,1.56,.64,1) forwards;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(230,81,0,.35)}
+@keyframes banIn{from{opacity:0;transform:scale(.88) translateY(-12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.qr-banner::before{content:'';position:absolute;top:-20px;right:-20px;width:90px;height:90px;background:rgba(255,255,255,.1);border-radius:50%;pointer-events:none}
+.qr-banner::after{content:'';position:absolute;bottom:-25px;right:40px;width:60px;height:60px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none}
+.ban-ico{font-size:38px;flex-shrink:0;z-index:1;animation:phonePulse 2s ease-in-out infinite}
+@keyframes phonePulse{0%,100%{transform:scale(1) rotate(0deg)}30%{transform:scale(1.18) rotate(-10deg)}60%{transform:scale(1.12) rotate(6deg)}}
+.ban-txt{flex:1;z-index:1}
+.ban-txt strong{display:block;font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;letter-spacing:-.1px}
+.ban-txt span{font-size:12px;color:rgba(255,255,255,.87);line-height:1.45;display:block}
+.ban-arr{font-size:22px;color:rgba(255,255,255,.9);z-index:1;animation:bounce 1s ease-in-out infinite;flex-shrink:0}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+/* ── QR RESULT ── */
+.qrwrap{display:inline-block;padding:16px;background:#fff;border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh)}
+.qrpop{animation:qpa .32s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes qpa{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.summ{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:14px;font-size:13px}
+.sumrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.sumrow:last-child{border:none;padding-bottom:0}.suml{color:var(--t2);flex-shrink:0}.sumv{text-align:right;font-weight:500}
+.acrow{display:flex;gap:7px;margin-bottom:6px}
+.acb{flex:1;padding:11px 4px;border:1px solid var(--border);border-radius:var(--r2);background:var(--s2);color:var(--text);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--ff);transition:background .1s}
+.acb:hover{background:var(--s3)}
+</style>
+</head>
+<body>
+<!-- INTRO OVERLAY -->
+<div id="intro" class="iov">
+  <div class="ish">
+    <div class="ihdl"></div>
+    <div id="is-0" class="isl act">
+      <span class="iem">👋</span>
+      <h3 class="itl">Selamat Datang!</h3>
+      <p class="idc">Buat kode QR transaksi top up dalam hitungan detik. Berlaku untuk semua layanan — e-wallet, tagihan, pulsa, game, dan lainnya.</p>
+    </div>
+    <div id="is-1" class="isl">
+      <span class="iem">⚡</span>
+      <h3 class="itl">3 Langkah Saja</h3>
+      <p class="idc" style="text-align:left;background:var(--s2);border-radius:10px;padding:14px 16px;line-height:2;font-size:13px;">
+        1️⃣ &nbsp;Pilih layanan<br>
+        2️⃣ &nbsp;Isi nomor HP &amp; jumlah<br>
+        3️⃣ &nbsp;Tunjukkan QR ke penjual ✓
+      </p>
+    </div>
+    <div id="is-2" class="isl">
+      <span class="iem">📲</span>
+      <h3 class="itl">Satu Hal Penting!</h3>
+      <p class="idc">Setelah QR dibuat, tunjukkan langsung layar ini kepada penjual. Penjual akan scan QR untuk memproses transaksi Anda.</p>
+      <div class="iwrn">⚠️ <strong>Jangan tutup atau refresh</strong> halaman sebelum penjual berhasil scan QR!</div>
+    </div>
+    <div class="idts">
+      <div class="idt act" id="id0"></div>
+      <div class="idt" id="id1"></div>
+      <div class="idt" id="id2"></div>
+    </div>
+    <div class="ifoot">
+      <button class="imb" id="imb" onclick="introNext()">Lanjut</button>
+      <button class="iskp" onclick="closeIntro()">Lewati</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="wrap">
+  <div class="hdr">
+    <button class="bkb" id="bkb" onclick="goBack()" style="display:none;">&#8592;</button>
+    <div class="ht">
+      <h2 id="htitle">Pilih Layanan</h2>
+      <p id="hsub">Langkah 1 dari 3</p>
+    </div>
+    <div class="dots">
+      <div class="dot act" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step act" id="step1">
+    <div class="catg" id="catg"></div>
+    <div id="svcwrap" style="display:none;">
+      <div class="card" style="margin-bottom:0;">
+        <span class="svclbl" id="svclbl">Pilih layanan</span>
+        <div class="svcg" id="svcg"></div>
+        <div id="custw" style="display:none;">
+          <input type="text" id="custi" placeholder="cth: PDAM Tirta, Angsuran, Donasi..." maxlength="40" oninput="onCustInput()"/>
+          <button class="mb" id="custbtn" onclick="confirmCust()" disabled style="margin-top:10px;">Lanjut &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="step2">
+    <div id="stag"></div>
+    <div class="card">
+      <span class="lbl">Nomor HP / ID Pelanggan <span class="badge" style="background:#FEF3CD;color:#92400E;">Wajib</span></span>
+      <div class="fi" id="fi-ph">
+        <input type="tel" id="phi" class="real-input" placeholder="Tap atau paste nomor..." oninput="onPhInput()" onfocus="onPhFocus()" onblur="onPhBlur()">
+        <div class="fi-clr" id="ph-x" onclick="clrPh()">&#215;</div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="lbl">Jumlah <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3);">opsional</span></span>
+      <div class="prrow" id="prrow"></div>
+      <div class="mdr" id="mdr"></div>
+      <div class="fi" id="fi-am">
+        <span class="rp-pre" id="rp-lbl">Rp</span>
+        <input type="tel" id="ami" class="real-input" placeholder="Tap atau paste jumlah..." oninput="onAmInput()" onfocus="onAmFocus()" onblur="onAmBlur()">
+        <div class="fi-clr" id="am-x" onclick="clrAm()">&#215;</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:20px;">
+      <button class="nt" onclick="togNote()">
+        <span class="ntico" id="nticon">+</span>
+        <span id="ntlbl">Tambah catatan</span>
+      </button>
+      <div id="notew" style="display:none;">
+        <input type="text" id="notei" placeholder="cth: beli voucher, bayar Jan 2025..." maxlength="80"/>
+      </div>
+    </div>
+    <button class="mb" id="genbtn" onclick="doGen()" disabled>Buat QR Code</button>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="step3">
+    <div class="qr-banner">
+      <div class="ban-ico">📲</div>
+      <div class="ban-txt">
+        <strong>Tunjukkan QR ini ke Penjual!</strong>
+        <span>Penjual akan scan QR untuk memproses transaksi. Jangan tutup halaman ini.</span>
+      </div>
+      <div class="ban-arr">↓</div>
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div class="qrwrap qrpop"><div id="qrbox"></div></div>
+      <p style="font-size:11px;color:var(--t3);margin:8px 0 0;">QR berisi data transaksi</p>
+    </div>
+    <div class="summ" id="summ"></div>
+    <div class="acrow">
+      <button class="acb" onclick="doCopy()">Salin Data</button>
+      <button class="acb" onclick="doDL()">Unduh QR</button>
+      <button class="acb" onclick="newTx()">Transaksi Baru</button>
+    </div>
+    <p id="cpok" style="text-align:center;font-size:12px;color:var(--green);opacity:0;transition:opacity .3s;margin:6px 0 0;">&#10003; Tersalin ke clipboard</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ── SECURITY ───────────────────────────── */
+function setTxt(el,txt){el.textContent=txt;}
+
+/* ── DATA ───────────────────────────────── */
+const CATS=[
+  {id:'EW',l:'E-Wallet',s:'DANA · OVO · GoPay · ...',a:'EW',bg:'#E6F1FB',fg:'#185FA5',
+   pr:[10000,25000,50000,100000,200000,500000],
+   md:[{v:100,l:'+100'},{v:500,l:'+500'},{v:1000,l:'+1K'},{v:5000,l:'+5K'},{v:-1000,l:'−1K'},{v:-5000,l:'−5K'}],
+   sv:['DANA','OVO','GoPay','ShopeePay','LinkAja']},
+  {id:'TG',l:'Tagihan',s:'PLN · PDAM · BPJS · ...',a:'TG',bg:'#FAEEDA',fg:'#854F0B',
+   pr:[50000,100000,200000,300000,500000,1000000],
+   md:[{v:-50000,l:'−50K'},{v:-10000,l:'−10K'},{v:10000,l:'+10K'},{v:50000,l:'+50K'},{v:100000,l:'+100K'}],
+   sv:['PLN','PDAM','BPJS','Indihome','Telkom','Gas PGN']},
+  {id:'PL',l:'Pulsa & Data',s:'Telkomsel · XL · Indosat · ...',a:'PL',bg:'#EAF3DE',fg:'#3B6D11',
+   pr:[5000,10000,25000,50000,100000],
+   md:[{v:-5000,l:'−5K'},{v:-1000,l:'−1K'},{v:1000,l:'+1K'},{v:5000,l:'+5K'},{v:10000,l:'+10K'}],
+   sv:['Telkomsel','XL','Indosat','Tri','Smartfren','Axis']},
+  {id:'GM',l:'Voucher Game',s:'ML · Free Fire · Steam · ...',a:'GM',bg:'#EEEDFE',fg:'#534AB7',
+   pr:[5000,10000,25000,50000,100000,200000],
+   md:[{v:-5000,l:'−5K'},{v:1000,l:'+1K'},{v:5000,l:'+5K'},{v:10000,l:'+10K'},{v:25000,l:'+25K'}],
+   sv:['Mobile Legends','Free Fire','PUBG','Roblox','Steam','Valorant']},
+  {id:'LN',l:'Lainnya',s:'Ketik nama layanan bebas',a:'+',bg:'#F1EFE8',fg:'#5F5E5A',
+   pr:[10000,25000,50000,100000,200000,500000],
+   md:[{v:-10000,l:'−10K'},{v:-5000,l:'−5K'},{v:5000,l:'+5K'},{v:10000,l:'+10K'},{v:50000,l:'+50K'}],
+   sv:[]}
+];
+
+/* ── STATE ──────────────────────────────── */
+let curCat=null,curSvc=null,curStep=1;
+let phRaw='';
+let amtRaw=0,noteOpen=false;
+let introIdx=0;
+
+/* ── INTRO ──────────────────────────────── */
+function introNext(){
+  if(introIdx<2){
+    document.getElementById('is-'+introIdx).classList.remove('act');
+    introIdx++;
+    document.getElementById('is-'+introIdx).classList.add('act');
+    document.querySelectorAll('.idt').forEach((d,i)=>{d.className='idt'+(i===introIdx?' act':'');});
+    setTxt(document.getElementById('imb'),introIdx===2?'Mulai Sekarang →':'Lanjut');
+  } else {closeIntro();}
+}
+function closeIntro(){
+  const el=document.getElementById('intro');
+  el.style.transition='opacity .22s';el.style.opacity='0';
+  setTimeout(()=>el.style.display='none',220);
+}
+
+/* ── INIT ───────────────────────────────── */
+function init(){
+  // Build category cards
+  const g=document.getElementById('catg');
+  CATS.forEach(c=>{
+    const d=document.createElement('div');d.className='catc';d.id='cc-'+c.id;
+    if(c.id==='LN')d.style.gridColumn='span 2';
+    const ico=document.createElement('div');ico.className='caticon';
+    ico.style.cssText=`background:${c.bg};color:${c.fg};`;setTxt(ico,c.a);
+    const info=document.createElement('div');info.style.minWidth='0';
+    const nm=document.createElement('p');nm.className='catnm';setTxt(nm,c.l);
+    const sub=document.createElement('p');sub.className='catsub';setTxt(sub,c.s);
+    info.append(nm,sub);d.append(ico,info);
+    d.addEventListener('pointerdown',()=>pickCat(c));
+    g.appendChild(d);
+  });
+
+  // Native inputs handle focus themselves
+}
+
+/* ── STEP 1 ─────────────────────────────── */
+function pickCat(cat){
+  curCat=cat;curSvc=null;
+  CATS.forEach(c=>document.getElementById('cc-'+c.id).classList.remove('on'));
+  document.getElementById('cc-'+cat.id).classList.add('on');
+  const sw=document.getElementById('svcwrap');sw.style.display='block';
+  const sg=document.getElementById('svcg'),cw=document.getElementById('custw');
+  sg.innerHTML='';
+  if(cat.id==='LN'){
+    sg.style.display='none';cw.style.display='block';
+    document.getElementById('custi').value='';
+    document.getElementById('custbtn').disabled=true;
+    setTxt(document.getElementById('svclbl'),'Nama layanan (ketik bebas)');
+  } else {
+    sg.style.display='grid';cw.style.display='none';
+    setTxt(document.getElementById('svclbl'),'Pilih layanan');
+    cat.sv.forEach(s=>{
+      const b=document.createElement('div');b.className='svcb';setTxt(b,s);
+      b.addEventListener('pointerdown',()=>pickSvc(s,b));sg.appendChild(b);
+    });
+  }
+  setTimeout(()=>sw.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+
+function pickSvc(s,btn){
+  curSvc=s;
+  document.querySelectorAll('.svcb').forEach(b=>b.classList.remove('pk'));
+  btn.classList.add('pk');
+  if(navigator.vibrate)navigator.vibrate(10);
+  setTimeout(()=>toStep(2),380);
+}
+
+function onCustInput(){
+  document.getElementById('custbtn').disabled=document.getElementById('custi').value.trim().length<2;
+}
+function confirmCust(){
+  const v=document.getElementById('custi').value.trim().replace(/<[^>]*>/g,'').slice(0,40);
+  if(v.length<2)return;curSvc=v;toStep(2);
+}
+
+/* ── NAVIGATION ─────────────────────────── */
+function toStep(n){
+  document.getElementById('step'+curStep).classList.remove('act');
+  curStep=n;
+  document.getElementById('step'+n).classList.add('act');
+  document.getElementById('bkb').style.display=n>1?'flex':'none';
+  const T=['','Pilih Layanan','Detail Transaksi','QR Code Siap'];
+  const S=['','Langkah 1 dari 3','Langkah 2 dari 3','Selesai — tunjukkan ke penjual'];
+  setTxt(document.getElementById('htitle'),T[n]);
+  setTxt(document.getElementById('hsub'),S[n]);
+  ['d1','d2','d3'].forEach((id,i)=>{
+    const d=document.getElementById(id);d.className='dot';
+    if(i+1<n)d.classList.add('dn');else if(i+1===n)d.classList.add('act');
+  });
+  if(n===2)setupS2();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goBack(){if(curStep===2)toStep(1);else if(curStep===3)toStep(2);}
+
+/* ── STEP 2 SETUP ───────────────────────── */
+function setupS2(){
+  const c=curCat;
+  // Service tag (all textContent — safe)
+  const stag=document.getElementById('stag');stag.innerHTML='';
+  const td=document.createElement('div');td.className='svctag';td.style.background=c.bg;
+  const ico=document.createElement('div');
+  ico.style.cssText=`width:32px;height:32px;border-radius:9px;background:${c.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;`;
+  setTxt(ico,c.a);
+  const info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+  const subl=document.createElement('p');subl.style.cssText=`font-size:11px;margin:0 0 1px;opacity:.7;color:${c.fg};`;setTxt(subl,c.l);
+  const svcp=document.createElement('p');svcp.style.cssText=`font-size:14px;font-weight:600;margin:0;color:${c.fg};`;setTxt(svcp,curSvc);
+  info.append(subl,svcp);
+  const ub=document.createElement('button');
+  ub.style.cssText=`font-size:12px;color:${c.fg};opacity:.65;cursor:pointer;text-decoration:underline;border:none;background:none;font-family:var(--ff);flex-shrink:0;padding:0;`;
+  setTxt(ub,'Ubah');ub.onclick=()=>toStep(1);
+  td.append(ico,info,ub);stag.appendChild(td);
+
+  // Presets
+  const pr=document.getElementById('prrow');pr.innerHTML='';
+  c.pr.forEach(v=>{
+    const b=document.createElement('button');b.className='prc';b.id='pr-'+v;
+    setTxt(b,fmtLabel(v));
+    b.addEventListener('pointerdown',()=>pickPr(v));pr.appendChild(b);
+  });
+
+  // Reset all state
+  phRaw='';amtRaw=0;noteOpen=false;
+  document.getElementById('phi').value='';
+  document.getElementById('ami').value='';
+  document.getElementById('rp-lbl').style.display='none';
+  document.getElementById('ph-x').style.display='none';
+  document.getElementById('am-x').style.display='none';
+  document.getElementById('fi-ph').classList.remove('foc');
+  document.getElementById('fi-am').classList.remove('foc');
+  document.getElementById('mdr').style.display='none';document.getElementById('mdr').innerHTML='';
+  document.getElementById('notew').style.display='none';document.getElementById('notei').value='';
+  setTxt(document.getElementById('nticon'),'+');setTxt(document.getElementById('ntlbl'),'Tambah catatan');
+  chkF();
+}
+
+/* ── PRESETS & MODIFIERS ────────────────── */
+function fmtLabel(v){return v>=1000000?(v/1000000)+'JT':v>=1000?(v/1000)+'K':String(v);}
+function fmtRp(n){return 'Rp '+n.toLocaleString('id-ID');}
+
+function pickPr(v){
+  document.querySelectorAll('.prc').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pr-'+v).classList.add('on');
+  amtRaw=v;updateAmDisp();showMods();chkF();
+  if(navigator.vibrate)navigator.vibrate(8);
+}
+function showMods(){
+  const row=document.getElementById('mdr');row.innerHTML='';row.style.display='flex';
+  curCat.md.forEach(m=>{
+    const b=document.createElement('button');b.className='mdc '+(m.v>0?'mda':'mds');setTxt(b,m.l);
+    b.addEventListener('pointerdown',()=>{
+      const nv=amtRaw+m.v;if(nv<0||nv>9999999)return;
+      amtRaw=nv;updateAmDisp();chkF();
+      document.querySelectorAll('.prc').forEach(x=>x.classList.remove('on'));
+      if(navigator.vibrate)navigator.vibrate(7);
+    });
+    row.appendChild(b);
+  });
+}
+
+/* ── INPUT HANDLERS ─────────────────────── */
+function fmtPhDisp(r){
+  if(!r)return'';const d=r.slice(0,15);
+  if(d.length<=4)return d;
+  if(d.length<=8)return d.slice(0,4)+' '+d.slice(4);
+  if(d.length<=12)return d.slice(0,4)+' '+d.slice(4,8)+' '+d.slice(8);
+  return d.slice(0,4)+' '+d.slice(4,8)+' '+d.slice(8,12)+' '+d.slice(12);
+}
+
+function onPhInput(){
+  const input = document.getElementById('phi');
+  let val = input.value.replace(/\D/g, '');
+  if (val.length > 15) val = val.slice(0, 15);
+  phRaw = val;
+  
+  let start = input.selectionStart;
+  let oldLen = input.value.length;
+  
+  let fmt = fmtPhDisp(val);
+  input.value = fmt;
+  
+  if(start !== null){
+    let diff = fmt.length - oldLen;
+    input.setSelectionRange(start + diff, start + diff);
+  }
+  
+  document.getElementById('ph-x').style.display = phRaw.length > 0 ? 'flex' : 'none';
+  chkF();
+}
+
+function onPhFocus() { document.getElementById('fi-ph').classList.add('foc'); }
+function onPhBlur() { document.getElementById('fi-ph').classList.remove('foc'); }
+
+function updateAmDisp(){
+  const has = amtRaw > 0;
+  document.getElementById('rp-lbl').style.display = has ? 'block' : 'none';
+  document.getElementById('am-x').style.display = has ? 'flex' : 'none';
+  document.getElementById('ami').value = has ? amtRaw.toLocaleString('id-ID') : '';
+}
+
+function onAmInput(e){
+  const input = document.getElementById('ami');
+  let val = input.value.replace(/\D/g, '');
+  amtRaw = val ? parseInt(val, 10) : 0;
+  if(amtRaw > 9999999) amtRaw = 9999999;
+  
+  updateAmDisp();
+  document.querySelectorAll('.prc').forEach(b=>b.classList.remove('on'));
+  if(amtRaw > 0) showMods(); else document.getElementById('mdr').style.display = 'none';
+  chkF();
+}
+
+function onAmFocus() { document.getElementById('fi-am').classList.add('foc'); }
+function onAmBlur() { document.getElementById('fi-am').classList.remove('foc'); }
+
+function clrPh(){phRaw='';document.getElementById('phi').value='';document.getElementById('ph-x').style.display='none';chkF();document.getElementById('phi').focus();}
+function clrAm(){amtRaw=0;updateAmDisp();document.querySelectorAll('.prc').forEach(b=>b.classList.remove('on'));document.getElementById('mdr').style.display='none';chkF();document.getElementById('ami').focus();}
+function chkF(){document.getElementById('genbtn').disabled=phRaw.length<6;}
+
+/* ── NOTE ───────────────────────────────── */
+function togNote(){
+  noteOpen=!noteOpen;
+  document.getElementById('notew').style.display=noteOpen?'block':'none';
+  setTxt(document.getElementById('nticon'),noteOpen?'−':'+');
+  setTxt(document.getElementById('ntlbl'),noteOpen?'Sembunyikan catatan':'Tambah catatan');
+  if(noteOpen)setTimeout(()=>document.getElementById('notei').focus(),60);
+}
+
+/* ── GENERATE ───────────────────────────── */
+function doGen(){
+  const note=document.getElementById('notei').value.replace(/<[^>]*>/g,'').trim().slice(0,80);
+  const ts=new Date().toLocaleString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const data={
+    kategori:String(curCat.l).slice(0,40),
+    layanan:String(curSvc).slice(0,40),
+    hp:phRaw.replace(/\D/g,'')
+  };
+  if(amtRaw>0)data.jumlah=amtRaw;
+  if(note)data.catatan=note;
+  data.waktu=ts;
+
+  const box=document.getElementById('qrbox');box.innerHTML='';
+  new QRCode(box,{text:JSON.stringify(data),width:220,height:220,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
+
+  // Summary (all textContent — XSS safe)
+  const summ=document.getElementById('summ');summ.innerHTML='';
+  const rows=[['Kategori',curCat.l],['Layanan',curSvc],['No. HP / ID',fmtPhDisp(phRaw)]];
+  if(amtRaw>0)rows.push(['Jumlah',fmtRp(amtRaw)]);
+  if(note)rows.push(['Catatan',note]);
+  rows.push(['Waktu',ts]);
+  rows.forEach(([l,v],i)=>{
+    const row=document.createElement('div');row.className='sumrow';
+    if(i===rows.length-1)row.style.borderBottom='none';
+    const lbl=document.createElement('span');lbl.className='suml';setTxt(lbl,l);
+    const val=document.createElement('span');val.className='sumv';
+    if(l==='No. HP / ID')val.style.fontFamily='var(--fm)';
+    if(l==='Waktu'){val.style.color='var(--t3)';val.style.fontSize='12px';val.style.fontWeight='400';}
+    setTxt(val,v);row.append(lbl,val);summ.appendChild(row);
+  });
+  toStep(3);
+}
+
+/* ── ACTIONS ────────────────────────────── */
+function doCopy(){
+  const note=document.getElementById('notei').value.replace(/<[^>]*>/g,'').trim();
+  let t=`Kategori: ${curCat.l}\nLayanan: ${curSvc}\nNo. HP/ID: ${fmtPhDisp(phRaw)}`;
+  if(amtRaw>0)t+=`\nJumlah: ${fmtRp(amtRaw)}`;
+  if(note)t+=`\nCatatan: ${note}`;
+  navigator.clipboard.writeText(t).then(()=>{
+    const m=document.getElementById('cpok');m.style.opacity='1';
+    setTimeout(()=>m.style.opacity='0',2500);
+  });
+}
+function doDL(){
+  const cv=document.querySelector('#qrbox canvas');if(!cv)return;
+  const a=document.createElement('a');
+  const sf=String(curSvc).replace(/[^a-zA-Z0-9\u00C0-\u024F]/g,'-').slice(0,20);
+  a.download=`qr-${sf}-${phRaw}.png`;a.href=cv.toDataURL('image/png');a.click();
+}
+function newTx(){
+  curCat=null;curSvc=null;phRaw='';amtRaw=0;noteOpen=false;
+  CATS.forEach(c=>document.getElementById('cc-'+c.id).classList.remove('on'));
+  document.getElementById('svcwrap').style.display='none';
+  toStep(1);
+}
+
+init();
+</script>
+</body>
+</html>
